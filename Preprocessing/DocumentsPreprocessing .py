@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unicodedata
 import re
-import MySQLdb
+# import MySQLdb
 
 
 listOfPunctuationBySymbol = [' .', ' :', '«', '»', '،', '؛', '؟', '.(', ').', ':(', '):', '» .']
