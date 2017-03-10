@@ -11,6 +11,8 @@ listOfPunctuationBySymbol = [' .', ' :', '«', '»', '،', '؛', '؟', '.(', ').
 
 listOfArabicDiacriticsUnicode = [["064b", "064c", "064d", "064e", "064f", "0650", "0651", "0652"],
                                  [1, 2, 3, 4, 5, 6, 8, 7]]
+
+listOfArabicDiacriticsUnicode2 = [("064b", 1),("064c", 2),("064d", 3),("064e", 4),("064f", 5),("0650", 6),("0651", 8),("0652", 7)]
 listOfWords = []
 listOfWordsInSent = []
 ListOfWordsWithPunctuation = []
@@ -48,7 +50,7 @@ lettersWithOneDiac = 0
 lettersWithTwoDiac = 0
 
 listOfLettersWith2Diac = []
-
+listOfEncodedWords = []
 x = 0b10001
 
 for word in listOfWords:
@@ -73,6 +75,7 @@ for word in listOfWords:
                 maskedInt = integer & 255;
                 maskedBinaryAsString = bin(integer & 255)[2:].zfill(16)
                 shiftedInt = maskedInt << 4
+                listOfEncodedWords.append(bin(shiftedInt)[2:].zfill(16))
 
             elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':  # first diacritization
                 lettersWithOneDiac += 1
@@ -81,8 +84,10 @@ for word in listOfWords:
                 letterFoundFlag = False
 
                 hexDiacAsString = hex(ord(c))[2:].zfill(4)
-                integerDiac = [i for i, x in enumerate(listOfArabicDiacriticsUnicode) if x[1] == c][0]
+                integerDiac = [i for i, x in enumerate(listOfArabicDiacriticsUnicode2) if x[0] == hexDiacAsString][1]
                 integerDiacAfterAnding = shiftedInt & integerDiac
+                listOfEncodedWords.pop()
+                listOfEncodedWords.append(bin(integerDiacAfterAnding)[2:].zfill(16))
 
             elif prevCharWasDiac and c != u'ٔ' and c != u'ٕ':  # second diacritization
                 lettersWithTwoDiac += 1
@@ -92,36 +97,15 @@ for word in listOfWords:
                 listOfLettersWith2Diac.append(c)
 
                 hexSecDiacAsString = hex(ord(c))[2:].zfill(4)
-                integerSecDiac = [i for i, x in enumerate(listOfArabicDiacriticsUnicode) if x[1] == c][0]
+                integerSecDiac = [i for i, x in enumerate(listOfArabicDiacriticsUnicode2) if x[0] == hexDiacAsString][1]
                 integerSecDiacAfterAnding = integerDiacAfterAnding & integerDiac
+                listOfEncodedWords.pop()
+                listOfEncodedWords.append(bin(integerSecDiacAfterAnding)[2:].zfill(16))
 
 
+for item in listOfEncodedWords:
+    print item
 
-
-
-for word in listOfWords:
-    if not word in listOfPunctuationBySymbol:
-        word = word.decode('utf-8', 'ignore')
-        nfkd_form = unicodedata.normalize('NFKD', word)
-
-        for c in word:
-            hexString = hex(ord(c))[2:].zfill(4)
-            #print "hex string: ", hexString
-
-            binaryString = bin(int(hexString, 16))[2:].zfill(16)
-            #print "binaryString: ", binaryString
-
-            integerString = int(hexString, 16)
-            #print "integerString: ", integerString
-
-            maskedInt = integerString & 255;
-
-            maskedString = bin(integerString & 255)[2:].zfill(16)
-            #print "maskedString: ", maskedString
-
-            shiftedInputString = maskedInt << 4
-
-            #print bin(shiftedInputString)[2:].zfill(16)
 
 
 
