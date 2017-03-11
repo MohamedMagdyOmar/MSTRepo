@@ -11,8 +11,6 @@ listOfPunctuationBySymbol = [' .', ' :', '«', '»', '،', '؛', '؟', '.(', ').
 listOfArabicDiacriticsUnicode = [["064b", "064c", "064d", "064e", "064f", "0650", "0651", "0652"],
                                  [1, 2, 3, 4, 5, 6, 8, 7]]
 
-listOfArabicDiacriticsUnicode2 = [("064b", 1), ("064c", 2), ("064d", 3), ("064e", 4), ("064f", 5), ("0650", 6),
-                                  ("0651", 8), ("0652", 7)]
 listOfWords = []
 listOfWordsInSent = []
 ListOfWordsWithPunctuation = []
