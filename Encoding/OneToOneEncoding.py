@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import unicodedata
-import binascii
-# s = "ثُمَّ"
+
 f = open("/home/mohamed/Desktop/Game3Sa7e7.txt", 'r')
 read_data = f.readlines()
 f.close()
@@ -42,33 +41,22 @@ for word in listOfWords:
         ListOfWordsWithPunctuation.append([word, sentenceCount])
         sentenceCount += 1
 
-listOfUnDiacritizedWord = []
-letterCount = 0
 prevCharWasDiac = False
 letterFoundFlag = False
-lettersWithNoDiac = 0
-lettersWithOneDiac = 0
-lettersWithTwoDiac = 0
 
-listOfLettersWith2Diac = []
 listOfEncodedWords = []
-x = 0b10001
 
 for word in listOfWords:
     if not word in listOfPunctuationBySymbol:
         word = word.decode('utf-8', 'ignore')
-        nfkd_form = unicodedata.normalize('NFKD', word)
-        unDiacritizedWord = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
-        listOfUnDiacritizedWord.append(unDiacritizedWord)
 
         letterFoundFlag = False
         prevCharWasDiac = False
 
-        for c in nfkd_form:
+        for c in word:
 
             if not unicodedata.combining(c):  # letter
                 letterFoundFlag = True
-                lettersWithNoDiac += 1
 
                 hexAsString = hex(ord(c))[2:].zfill(4)
                 binaryAsString = bin(int(hexAsString, 16))[2:].zfill(16)
@@ -80,9 +68,7 @@ for word in listOfWords:
                 listOfEncodedWords.append(bin(shiftedInt)[2:].zfill(16))
 
             elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':  # first diacritization
-                lettersWithOneDiac += 1
                 prevCharWasDiac = True
-                lettersWithNoDiac -= 1
                 letterFoundFlag = False
 
                 hexDiacAsString = hex(ord(c))[2:].zfill(4)
@@ -94,11 +80,9 @@ for word in listOfWords:
                 listOfEncodedWords.append(bin(integerDiacAfterORing)[2:].zfill(16))
 
             elif prevCharWasDiac and c != u'ٔ' and c != u'ٕ':  # second diacritization
-                lettersWithTwoDiac += 1
-                lettersWithOneDiac -= 1
+
                 letterFoundFlag = False
                 prevCharWasDiac = False
-                listOfLettersWith2Diac.append(c)
 
                 hexSecDiacAsString = hex(ord(c))[2:].zfill(4)
                 integerSecDiac = listOfArabicDiacriticsUnicode[1][listOfArabicDiacriticsUnicode[0].index(hexSecDiacAsString)]
