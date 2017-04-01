@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import re
 import unicodedata
+import MySQLdb
 
-f = open("/home/mohamed/Desktop/Game3Sa7e7.txt", 'r')
+f = open("/home/mohamed/Desktop/الجامع الصحيح المسمى صحيح مسلم.txt", 'r')
 read_data = f.readlines()
 f.close()
 
@@ -120,12 +121,13 @@ for word in listOfWords:
                 listOfInputSequenceEncodedWords.append(bin(shiftedInt)[2:].zfill(16))
 
 
-for item in listOfTargetSequenceEncodedWords:
-    print hex(int(item,2))
+for item in range(0,len(listOfInputSequenceEncodedWords)):
+    #print hex(int(item,2))
+    listOfInputSequenceEncodedWords[item] = str(listOfInputSequenceEncodedWords[item])
+    print listOfInputSequenceEncodedWords[item]
 
-for item in listOfInputSequenceEncodedWords:
-    print hex(int(item,2))
-
+# for item in listOfInputSequenceEncodedWords:
+#    print hex(int(item,2))
 
 
 letterFoundFlag = False
@@ -136,7 +138,7 @@ second = ""
 third = ""
 overall = ""
 spaChar = unicodedata.normalize('NFC', word)
-list = []
+diacritizedCharacter = []
 
 for word in listOfWords:
     if not word in listOfPunctuationBySymbol:
@@ -148,26 +150,47 @@ for word in listOfWords:
               letterFoundFlag = True
               overall = c
               comp = unicodedata.normalize('NFC', c)
-              list.append(comp)
+              diacritizedCharacter.append(comp)
             elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':
                 second = c
                 prevCharWasDiac = True
                 letterFoundFlag = False
                 overall +=c
                 comp = unicodedata.normalize('NFC', overall + c)
-                list.pop()
-                list.append(comp)
+                diacritizedCharacter.pop()
+                diacritizedCharacter.append(comp)
             elif prevCharWasDiac and c != u'ٔ' and c != u'ٕ':  # second diacritization
                 third = c
                 letterFoundFlag = False
                 prevCharWasDiac = False
                 overall += c
                 comp = unicodedata.normalize('NFC', overall + c)
-                list.pop()
-                list.append(comp)
+                diacritizedCharacter.pop()
+                diacritizedCharacter.append(comp)
 
 
+print len(listOfInputSequenceEncodedWords)
+print len(listOfTargetSequenceEncodedWords)
+print len(diacritizedCharacter)
 
+print type(listOfInputSequenceEncodedWords[0])
+print type(listOfTargetSequenceEncodedWords[0])
+print type(diacritizedCharacter[0])
 
-for x in range(0, len(list)):
-    print list[x]
+db = MySQLdb.connect(host="127.0.0.1",    # your host, usually localhost
+                     user="root",         # your username
+                     passwd="Islammega88",  # your password
+                     db="MSTDB", # name of the data base
+                     use_unicode=True,
+                     charset="utf8",
+                     init_command='SET NAMES UTF8')
+
+cur = db.cursor()
+
+for x in range(0,len(listOfInputSequenceEncodedWords)):
+    cur.execute("INSERT INTO EncodedWords(InputSequenceEncodedWords,TargetSequenceEncodedWords,diacritizedCharacter) VALUES (%s,%s,%s)",
+                (listOfInputSequenceEncodedWords[x],listOfTargetSequenceEncodedWords[x],diacritizedCharacter[x],))
+
+db.commit()
+
+db.close()
