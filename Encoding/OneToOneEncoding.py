@@ -42,7 +42,7 @@ for word in listOfWords:
 prevCharWasDiac = False
 letterFoundFlag = False
 
-listOfEncodedWords = []
+listOfTargetSequenceEncodedWords = []
 
 for word in listOfWords:
     if not word in listOfPunctuationBySymbol:
@@ -57,25 +57,27 @@ for word in listOfWords:
                 letterFoundFlag = True
 
                 hexAsString = hex(ord(c))[2:].zfill(4)
+
                 binaryAsString = bin(int(hexAsString, 16))[2:].zfill(16)
                 integer = int(hexAsString, 16)
                 maskedInt = integer & 255;
                 maskedBinaryAsString = bin(integer & 255)[2:].zfill(16)
                 shiftedInt = maskedInt << 4
                 shiftedIntInBin = bin(shiftedInt)
-                listOfEncodedWords.append(bin(shiftedInt)[2:].zfill(16))
+                listOfTargetSequenceEncodedWords.append(bin(shiftedInt)[2:].zfill(16))
 
             elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':  # first diacritization
                 prevCharWasDiac = True
                 letterFoundFlag = False
 
                 hexDiacAsString = hex(ord(c))[2:].zfill(4)
+
                 binaryAsString = bin(int(hexDiacAsString, 16))[2:].zfill(16)
 
                 integerDiac=listOfArabicDiacriticsUnicode[1][listOfArabicDiacriticsUnicode[0].index(hexDiacAsString)]
                 integerDiacAfterORing = shiftedInt | integerDiac
-                listOfEncodedWords.pop()
-                listOfEncodedWords.append(bin(integerDiacAfterORing)[2:].zfill(16))
+                listOfTargetSequenceEncodedWords.pop()
+                listOfTargetSequenceEncodedWords.append(bin(integerDiacAfterORing)[2:].zfill(16))
 
             elif prevCharWasDiac and c != u'ٔ' and c != u'ٕ':  # second diacritization
 
@@ -83,23 +85,89 @@ for word in listOfWords:
                 prevCharWasDiac = False
 
                 hexSecDiacAsString = hex(ord(c))[2:].zfill(4)
+
                 integerSecDiac = listOfArabicDiacriticsUnicode[1][listOfArabicDiacriticsUnicode[0].index(hexSecDiacAsString)]
                 integerSecDiacAfterORing = integerDiacAfterORing | integerSecDiac
-                listOfEncodedWords.pop()
-                listOfEncodedWords.append(bin(integerSecDiacAfterORing)[2:].zfill(16))
+                listOfTargetSequenceEncodedWords.pop()
+                listOfTargetSequenceEncodedWords.append(bin(integerSecDiacAfterORing)[2:].zfill(16))
 
 
-for item in listOfEncodedWords:
-    print item
+listOfUnDiacritizedWord = []
+listOfInputSequenceEncodedWords = []
+
+for word in listOfWords:
+    if not word in listOfPunctuationBySymbol:
+
+        word = word.decode('utf-8', 'ignore')
+        nfkd_form = unicodedata.normalize('NFKD', word)
+
+        unDiacritizedWord = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
+        listOfUnDiacritizedWord.append(unDiacritizedWord)
+
+        for c in word:
+
+            if not unicodedata.combining(c):  # letter
+                letterFoundFlag = True
+
+                hexAsString = hex(ord(c))[2:].zfill(4)
+
+                binaryAsString = bin(int(hexAsString, 16))[2:].zfill(16)
+                integer = int(hexAsString, 16)
+                maskedInt = integer & 255;
+                maskedBinaryAsString = bin(integer & 255)[2:].zfill(16)
+                shiftedInt = maskedInt << 4
+                shiftedIntInBin = bin(shiftedInt)
+                listOfInputSequenceEncodedWords.append(bin(shiftedInt)[2:].zfill(16))
+
+
+for item in listOfTargetSequenceEncodedWords:
+    print hex(int(item,2))
+
+for item in listOfInputSequenceEncodedWords:
+    print hex(int(item,2))
+
+
+
+letterFoundFlag = False
+prevCharWasDiac = False
+
+first = ""
+second = ""
+third = ""
+overall = ""
+spaChar = unicodedata.normalize('NFC', word)
+list = []
+
+for word in listOfWords:
+    if not word in listOfPunctuationBySymbol:
+        word = word.decode('utf-8', 'ignore')
+        spaChar = unicodedata.normalize('NFC', word)
+        for c in spaChar:
+            if not unicodedata.combining(c):
+              first = c
+              letterFoundFlag = True
+              overall = c
+              comp = unicodedata.normalize('NFC', c)
+              list.append(comp)
+            elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':
+                second = c
+                prevCharWasDiac = True
+                letterFoundFlag = False
+                overall +=c
+                comp = unicodedata.normalize('NFC', overall + c)
+                list.pop()
+                list.append(comp)
+            elif prevCharWasDiac and c != u'ٔ' and c != u'ٕ':  # second diacritization
+                third = c
+                letterFoundFlag = False
+                prevCharWasDiac = False
+                overall += c
+                comp = unicodedata.normalize('NFC', overall + c)
+                list.pop()
+                list.append(comp)
 
 
 
 
-
-
-
-
-
-
-
-
+for x in range(0, len(list)):
+    print list[x]

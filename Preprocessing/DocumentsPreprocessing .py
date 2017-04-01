@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import unicodedata
 import re
-# import MySQLdb
+import MySQLdb
 
-
+test = []
 listOfPunctuationBySymbol = [' .', ' :', '«', '»', '،', '؛', '؟', '.(', ').', ':(', '):', '» .']
 listOfPunctuationByCodePoint = ['060C', '061B', '061F', '003A', '002E']
 
-f = open("/home/mohamed/Desktop/Game3Sa7e7.txt", 'r')
+f = open("/home/mohamed/Desktop/الجامع الصحيح المسمى صحيح مسلم.txt", 'r')
 read_data = f.readlines()
 f.close()
 
@@ -51,8 +51,11 @@ listOfLettersWith2Diac = []
 
 for word in listOfWords:
     if not word in listOfPunctuationBySymbol:
+
         word = word.decode('utf-8', 'ignore')
+        test.append(word)
         nfkd_form = unicodedata.normalize('NFKD', word)
+
         unDiacritizedWord = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
         listOfUnDiacritizedWord.append(unDiacritizedWord)
 
@@ -138,23 +141,38 @@ while rowsCount < len(listOfWordsInSent):
 
 f.close()
 
-'''
+listOfUndiacritizedCharacter = [];
+listOfDiacritizedCharacter = [];
+
+#for x in range(0, len(listOfUnDiacritizedWord)):
+    #for c in (listOfUnDiacritizedWord[x]):
+   #     listOfUndiacritizedCharacter.append(c)
+
+#for x in range(0, len(test)):
+ #   for c in range(0,test[x]):
+  #      listOfDiacritizedCharacter.append(c)
+
+print type(listOfWords[0])
+
 
 db = MySQLdb.connect(host="127.0.0.1",    # your host, usually localhost
                      user="root",         # your username
                      passwd="Islammega88",  # your password
-                     db="ArabicCorpus", # name of the data base
+                     db="MSTDB", # name of the data base
                      use_unicode=True,
-                     charset="utf8")
+                     charset="utf8",
+                     init_command='SET NAMES UTF8')
 
 cur = db.cursor()
 
 # cur.executemany("""INSERT INTO DocWords (Word, SentenceID) VALUES (%s, %s)""", finalWordList)
 # cur.executemany("""INSERT INTO DocWords (Word, SentenceID) VALUES (%s, %s)""", listOfWordsInSent)
-cur.executemany("""INSERT INTO DocWords (Word) VALUES (%s)""", listOfLettersWith2Diac)
+# cur.executemany("""INSERT INTO DocWords (Word) VALUES (%s)""", listOfLettersWith2Diac)
 
+cur.executemany("""INSERT INTO ListOfWords (unDiacritizedWord) VALUES (%s)""",(listOfUndiacritizedCharacter))
+#cur.executemany("""INSERT INTO ListOfWords (diacritizedWord) VALUES (%s,%s,%s,%s)""",
+#               [listOfWordsInSent[0]])
 db.commit()
 
 db.close()
 
-'''
