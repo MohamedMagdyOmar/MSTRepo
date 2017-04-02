@@ -2,8 +2,18 @@
 import re
 import unicodedata
 import MySQLdb
+import os, fnmatch
 
-f = open("/home/mohamed/Desktop/الجامع الصحيح المسمى صحيح مسلم.txt", 'r')
+# looping over all txt documents in a folder
+#def findFiles (path, filter):
+#    for root, dirs, files in os.walk(path):
+#        for file in fnmatch.filter(files, filter):
+#            yield os.path.join(root, file)
+
+#for textFile in findFiles(r'/home/mohamed/Desktop/MSTRepo/MSTRepo/PaperCorpus', '*.txt'):
+    #print(textFile)
+
+f = open('/home/mohamed/Desktop/الجامع الصحيح المسمى صحيح مسلم.txt', 'r')
 read_data = f.readlines()
 f.close()
 
@@ -45,6 +55,7 @@ letterFoundFlag = False
 
 listOfTargetSequenceEncodedWords = []
 
+# Encoding Target Sequence [Diacritized Character]
 for word in listOfWords:
     if not word in listOfPunctuationBySymbol:
         word = word.decode('utf-8', 'ignore')
@@ -96,6 +107,7 @@ for word in listOfWords:
 listOfUnDiacritizedWord = []
 listOfInputSequenceEncodedWords = []
 
+# Encoding Input Sequence [unDiacritized Character]
 for word in listOfWords:
     if not word in listOfPunctuationBySymbol:
 
@@ -126,8 +138,6 @@ for item in range(0,len(listOfInputSequenceEncodedWords)):
     listOfInputSequenceEncodedWords[item] = str(listOfInputSequenceEncodedWords[item])
     print listOfInputSequenceEncodedWords[item]
 
-# for item in listOfInputSequenceEncodedWords:
-#    print hex(int(item,2))
 
 
 letterFoundFlag = False
@@ -139,10 +149,18 @@ third = ""
 overall = ""
 spaChar = unicodedata.normalize('NFC', word)
 diacritizedCharacter = []
+unDiacritizedCharacter = []
 
+# extracting each character from words with its diacritization
 for word in listOfWords:
     if not word in listOfPunctuationBySymbol:
         word = word.decode('utf-8', 'ignore')
+
+        # removing diacritization from characters
+        nfkd_form = unicodedata.normalize('NFKD', word)
+        unDiacritizedWord = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
+        listOfUnDiacritizedWord.append(unDiacritizedWord)
+
         spaChar = unicodedata.normalize('NFC', word)
         for c in spaChar:
             if not unicodedata.combining(c):
@@ -169,13 +187,9 @@ for word in listOfWords:
                 diacritizedCharacter.append(comp)
 
 
-print len(listOfInputSequenceEncodedWords)
-print len(listOfTargetSequenceEncodedWords)
-print len(diacritizedCharacter)
-
-print type(listOfInputSequenceEncodedWords[0])
-print type(listOfTargetSequenceEncodedWords[0])
-print type(diacritizedCharacter[0])
+for word in listOfUnDiacritizedWord:
+    for char in word:
+        unDiacritizedCharacter.append(char)
 
 db = MySQLdb.connect(host="127.0.0.1",    # your host, usually localhost
                      user="root",         # your username
@@ -188,8 +202,8 @@ db = MySQLdb.connect(host="127.0.0.1",    # your host, usually localhost
 cur = db.cursor()
 
 for x in range(0,len(listOfInputSequenceEncodedWords)):
-    cur.execute("INSERT INTO EncodedWords(InputSequenceEncodedWords,TargetSequenceEncodedWords,diacritizedCharacter) VALUES (%s,%s,%s)",
-                (listOfInputSequenceEncodedWords[x],listOfTargetSequenceEncodedWords[x],diacritizedCharacter[x],))
+    cur.execute("INSERT INTO EncodedWords(InputSequenceEncodedWords,TargetSequenceEncodedWords,diacritizedCharacter,undiacritizedCharacter) VALUES (%s,%s,%s,%s)",
+                (listOfInputSequenceEncodedWords[x],listOfTargetSequenceEncodedWords[x],diacritizedCharacter[x],unDiacritizedCharacter[x]))
 
 db.commit()
 
