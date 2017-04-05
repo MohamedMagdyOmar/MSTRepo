@@ -1,5 +1,4 @@
 import numpy as np
-import MySQLdb
 
 def one_hot_encode(x, n_classes):
     """
@@ -9,35 +8,16 @@ def one_hot_encode(x, n_classes):
      """
     return np.eye(n_classes)
 
-db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
-                         user="root",  # your username
-                         passwd="Islammega88",  # your password
-                         db="MSTDB",  # name of the data base
-                         use_unicode=True,
-                         charset="utf8",
-                         init_command='SET NAMES UTF8')
 
-cur = db.cursor()
-listOfUnDiacritizedCharacter = "SELECT Distinct undiacritizedCharacter FROM ListOfPurifiedCharacters"
-listOfDiacritizedCharacter = "SELECT diacritizedCharacter FROM ListOfPurifiedCharacters"
+def encodeMyCharacter(list_of_un_diacritized_character, list_of_diacritized_character):
 
-cur.execute(listOfUnDiacritizedCharacter);
-rowsUnDiacritizedCharacter = cur.fetchall();
+    n__un_diacritized_classes = len(list_of_un_diacritized_character)
+    n__diacritized_classes = len(list_of_diacritized_character)
 
-cur.execute(listOfDiacritizedCharacter);
-rowsOfDiacritizedCharacter = cur.fetchall();
+    one_hot_list__for_un_diacritized_characters = one_hot_encode(list_of_un_diacritized_character, n__un_diacritized_classes)
+    one_hot_list__for_diacritized_characters = one_hot_encode(list_of_diacritized_character, n__diacritized_classes)
 
-db.commit()
+    return one_hot_list__for_un_diacritized_characters,one_hot_list__for_diacritized_characters;
 
-db.close()
-
-n_UnDiacritizedClasses = len(rowsUnDiacritizedCharacter)
-n_DiacritizedClasses = len(rowsOfDiacritizedCharacter)
-
-one_hot_list_ForUnDiacritizedCharacters = one_hot_encode(listOfUnDiacritizedCharacter, n_UnDiacritizedClasses)
-one_hot_list_ForDiacritizedCharacters = one_hot_encode(listOfDiacritizedCharacter, n_DiacritizedClasses)
-
-print(one_hot_list_ForDiacritizedCharacters)
-print(one_hot_list_ForUnDiacritizedCharacters)
 
 

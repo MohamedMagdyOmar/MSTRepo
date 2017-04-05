@@ -5,13 +5,13 @@ import MySQLdb
 import os, fnmatch
 
 # looping over all txt documents in a folder
-#def findFiles (path, filter):
+# def findFiles (path, filter):
 #    for root, dirs, files in os.walk(path):
 #        for file in fnmatch.filter(files, filter):
 #            yield os.path.join(root, file)
 
-#for textFile in findFiles(r'/home/mohamed/Desktop/MSTRepo/MSTRepo/PaperCorpus', '*.txt'):
-    #print(textFile)
+# for textFile in findFiles(r'/home/mohamed/Desktop/MSTRepo/MSTRepo/PaperCorpus', '*.txt'):
+# print(textFile)
 
 f = open('/home/mohamed/Desktop/الجامع الصحيح المسمى صحيح مسلم.txt', 'r')
 read_data = f.readlines()
@@ -86,7 +86,7 @@ for word in listOfWords:
 
                 binaryAsString = bin(int(hexDiacAsString, 16))[2:].zfill(16)
 
-                integerDiac=listOfArabicDiacriticsUnicode[1][listOfArabicDiacriticsUnicode[0].index(hexDiacAsString)]
+                integerDiac = listOfArabicDiacriticsUnicode[1][listOfArabicDiacriticsUnicode[0].index(hexDiacAsString)]
                 integerDiacAfterORing = shiftedInt | integerDiac
                 listOfTargetSequenceEncodedWords.pop()
                 listOfTargetSequenceEncodedWords.append(bin(integerDiacAfterORing)[2:].zfill(16))
@@ -98,11 +98,11 @@ for word in listOfWords:
 
                 hexSecDiacAsString = hex(ord(c))[2:].zfill(4)
 
-                integerSecDiac = listOfArabicDiacriticsUnicode[1][listOfArabicDiacriticsUnicode[0].index(hexSecDiacAsString)]
+                integerSecDiac = listOfArabicDiacriticsUnicode[1][
+                    listOfArabicDiacriticsUnicode[0].index(hexSecDiacAsString)]
                 integerSecDiacAfterORing = integerDiacAfterORing | integerSecDiac
                 listOfTargetSequenceEncodedWords.pop()
                 listOfTargetSequenceEncodedWords.append(bin(integerSecDiacAfterORing)[2:].zfill(16))
-
 
 listOfUnDiacritizedWord = []
 listOfInputSequenceEncodedWords = []
@@ -132,13 +132,8 @@ for word in listOfWords:
                 shiftedIntInBin = bin(shiftedInt)
                 listOfInputSequenceEncodedWords.append(bin(shiftedInt)[2:].zfill(16))
 
-
-for item in range(0,len(listOfInputSequenceEncodedWords)):
-    #print hex(int(item,2))
+for item in range(0, len(listOfInputSequenceEncodedWords)):
     listOfInputSequenceEncodedWords[item] = str(listOfInputSequenceEncodedWords[item])
-    print listOfInputSequenceEncodedWords[item]
-
-
 
 letterFoundFlag = False
 prevCharWasDiac = False
@@ -164,16 +159,16 @@ for word in listOfWords:
         spaChar = unicodedata.normalize('NFC', word)
         for c in spaChar:
             if not unicodedata.combining(c):
-              first = c
-              letterFoundFlag = True
-              overall = c
-              comp = unicodedata.normalize('NFC', c)
-              diacritizedCharacter.append(comp)
+                first = c
+                letterFoundFlag = True
+                overall = c
+                comp = unicodedata.normalize('NFC', c)
+                diacritizedCharacter.append(comp)
             elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':
                 second = c
                 prevCharWasDiac = True
                 letterFoundFlag = False
-                overall +=c
+                overall += c
                 comp = unicodedata.normalize('NFC', overall + c)
                 diacritizedCharacter.pop()
                 diacritizedCharacter.append(comp)
@@ -186,24 +181,26 @@ for word in listOfWords:
                 diacritizedCharacter.pop()
                 diacritizedCharacter.append(comp)
 
-
 for word in listOfUnDiacritizedWord:
     for char in word:
         unDiacritizedCharacter.append(char)
 
-db = MySQLdb.connect(host="127.0.0.1",    # your host, usually localhost
-                     user="root",         # your username
+db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
+                     user="root",  # your username
                      passwd="Islammega88",  # your password
-                     db="MSTDB", # name of the data base
+                     db="MSTDB",  # name of the data base
                      use_unicode=True,
                      charset="utf8",
                      init_command='SET NAMES UTF8')
 
 cur = db.cursor()
 
-for x in range(0,len(listOfInputSequenceEncodedWords)):
-    cur.execute("INSERT INTO EncodedWords(InputSequenceEncodedWords,TargetSequenceEncodedWords,diacritizedCharacter,undiacritizedCharacter) VALUES (%s,%s,%s,%s)",
-                (listOfInputSequenceEncodedWords[x],listOfTargetSequenceEncodedWords[x],diacritizedCharacter[x],unDiacritizedCharacter[x]))
+# Part A : filling "Encoded Words" Table
+for x in range(0, len(listOfInputSequenceEncodedWords)):
+    cur.execute(
+        "INSERT INTO EncodedWords(InputSequenceEncodedWords,TargetSequenceEncodedWords,diacritizedCharacter,undiacritizedCharacter) VALUES (%s,%s,%s,%s)",
+        (listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x], diacritizedCharacter[x],
+         unDiacritizedCharacter[x]))
 
 db.commit()
 
