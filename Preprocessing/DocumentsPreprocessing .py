@@ -1,9 +1,17 @@
+# purpose of below code is :
+#  1- is to clean the document from punctuation symbol
+#  2- get document statistics
+#  3- create comma separated diacritized and undiacritized documents
+
 # -*- coding: utf-8 -*-
 import unicodedata
 import re
 import MySQLdb
 
-test = []
+docName = "الجامع الصحيح المسمى صحيح مسلم";
+listOfUndiacritizedCharacter = [];
+listOfDiacritizedCharacter = [];
+
 listOfPunctuationBySymbol = [' .', ' :', '«', '»', '،', '؛', '؟', '.(', ').', ':(', '):', '» .']
 listOfPunctuationByCodePoint = ['060C', '061B', '061F', '003A', '002E']
 
@@ -16,6 +24,7 @@ listOfWordsInSent = []
 ListOfWordsWithPunctuation = []
 wordCount = 0
 
+# removing punctuation and extracting words from Doc
 for eachSentence in read_data:
     wordsInSentence = eachSentence.split()
     for word in wordsInSentence:
@@ -29,6 +38,7 @@ for eachSentence in read_data:
 
 sentenceCount = 1
 
+# Creating List of words in sent with corresponding sentence count.
 for word in listOfWords:
 
     if not (word in listOfPunctuationBySymbol):
@@ -49,11 +59,11 @@ lettersWithTwoDiac = 0
 
 listOfLettersWith2Diac = []
 
+# removing diacritization from words, and count number of letters with and without diacritization.
 for word in listOfWords:
     if not word in listOfPunctuationBySymbol:
 
         word = word.decode('utf-8', 'ignore')
-        test.append(word)
         nfkd_form = unicodedata.normalize('NFKD', word)
 
         unDiacritizedWord = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
@@ -67,6 +77,7 @@ for word in listOfWords:
             if not unicodedata.combining(c):
                 letterFoundFlag = True
                 lettersWithNoDiac += 1
+                listOfUndiacritizedCharacter.append(c);
 
             elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':
                 lettersWithOneDiac += 1
@@ -140,39 +151,4 @@ while rowsCount < len(listOfWordsInSent):
         f.write('\n')
 
 f.close()
-
-listOfUndiacritizedCharacter = [];
-listOfDiacritizedCharacter = [];
-
-#for x in range(0, len(listOfUnDiacritizedWord)):
-    #for c in (listOfUnDiacritizedWord[x]):
-   #     listOfUndiacritizedCharacter.append(c)
-
-#for x in range(0, len(test)):
- #   for c in range(0,test[x]):
-  #      listOfDiacritizedCharacter.append(c)
-
-print type(listOfWords[0])
-
-
-db = MySQLdb.connect(host="127.0.0.1",    # your host, usually localhost
-                     user="root",         # your username
-                     passwd="Islammega88",  # your password
-                     db="MSTDB", # name of the data base
-                     use_unicode=True,
-                     charset="utf8",
-                     init_command='SET NAMES UTF8')
-
-cur = db.cursor()
-
-# cur.executemany("""INSERT INTO DocWords (Word, SentenceID) VALUES (%s, %s)""", finalWordList)
-# cur.executemany("""INSERT INTO DocWords (Word, SentenceID) VALUES (%s, %s)""", listOfWordsInSent)
-# cur.executemany("""INSERT INTO DocWords (Word) VALUES (%s)""", listOfLettersWith2Diac)
-
-cur.executemany("""INSERT INTO ListOfWords (unDiacritizedWord) VALUES (%s)""",(listOfUndiacritizedCharacter))
-#cur.executemany("""INSERT INTO ListOfWords (diacritizedWord) VALUES (%s,%s,%s,%s)""",
-#               [listOfWordsInSent[0]])
-db.commit()
-
-db.close()
 

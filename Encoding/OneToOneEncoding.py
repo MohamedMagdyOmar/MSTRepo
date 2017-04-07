@@ -13,6 +13,12 @@ import os, fnmatch
 # for textFile in findFiles(r'/home/mohamed/Desktop/MSTRepo/MSTRepo/PaperCorpus', '*.txt'):
 # print(textFile)
 
+docName = "الجامع الصحيح المسمى صحيح مسلم";
+diacritizedCharacter = []
+unDiacritizedCharacter = []
+listOfDBWords = []
+listOfDbSentenceNumber = [];
+
 f = open('/home/mohamed/Desktop/الجامع الصحيح المسمى صحيح مسلم.txt', 'r')
 read_data = f.readlines()
 f.close()
@@ -143,27 +149,38 @@ second = ""
 third = ""
 overall = ""
 spaChar = unicodedata.normalize('NFC', word)
-diacritizedCharacter = []
-unDiacritizedCharacter = []
+loopCount = 0;
 
 # extracting each character from words with its diacritization
 for word in listOfWords:
+
     if not word in listOfPunctuationBySymbol:
+
+
+
         word = word.decode('utf-8', 'ignore')
 
         # removing diacritization from characters
         nfkd_form = unicodedata.normalize('NFKD', word)
         unDiacritizedWord = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
-        listOfUnDiacritizedWord.append(unDiacritizedWord)
 
+        sentenceNumber = listOfWordsInSent[loopCount][1]
+        loopCount += 1;
         spaChar = unicodedata.normalize('NFC', word)
         for c in spaChar:
+
             if not unicodedata.combining(c):
                 first = c
                 letterFoundFlag = True
                 overall = c
                 comp = unicodedata.normalize('NFC', c)
                 diacritizedCharacter.append(comp)
+
+                listOfDbSentenceNumber.append(sentenceNumber)
+
+                listOfDBWords.append(word)
+                listOfUnDiacritizedWord.append(unDiacritizedWord)
+                unDiacritizedCharacter.append(c)
             elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':
                 second = c
                 prevCharWasDiac = True
@@ -181,9 +198,9 @@ for word in listOfWords:
                 diacritizedCharacter.pop()
                 diacritizedCharacter.append(comp)
 
-for word in listOfUnDiacritizedWord:
-    for char in word:
-        unDiacritizedCharacter.append(char)
+#for word in listOfUnDiacritizedWord:
+    #for char in word:
+      #  unDiacritizedCharacter.append(char)
 
 db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
                      user="root",  # your username
@@ -193,14 +210,26 @@ db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
                      charset="utf8",
                      init_command='SET NAMES UTF8')
 
-cur = db.cursor()
+#cur = db.cursor()
 
 # Part A : filling "Encoded Words" Table
+#for x in range(0, len(listOfInputSequenceEncodedWords)):
+ #   cur.execute(
+  #      "INSERT INTO EncodedWords(InputSequenceEncodedWords,TargetSequenceEncodedWords,diacritizedCharacter,undiacritizedCharacter) VALUES (%s,%s,%s,%s)",
+   #     (listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x], diacritizedCharacter[x],
+    #     unDiacritizedCharacter[x]))
+
+cur = db.cursor()
+letterType= 'training'
+
 for x in range(0, len(listOfInputSequenceEncodedWords)):
+
     cur.execute(
-        "INSERT INTO EncodedWords(InputSequenceEncodedWords,TargetSequenceEncodedWords,diacritizedCharacter,undiacritizedCharacter) VALUES (%s,%s,%s,%s)",
-        (listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x], diacritizedCharacter[x],
-         unDiacritizedCharacter[x]))
+        "INSERT INTO ParsedDocument(DocName, UnDiacritizedCharacter,DiacritizedCharacter,LetterType,SentenceNumber,"
+        "Word, "
+        "InputSequenceEncodedWords,TargetSequenceEncodedWords) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+        (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], letterType, listOfDbSentenceNumber[x], listOfDBWords[x],
+         listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x]))
 
 db.commit()
 
