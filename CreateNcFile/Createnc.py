@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
 import netcdf_helpers
 import MySQLdb
 from PIL import Image
-from numpy import *
+import numpy as np
 
+docName = "الجامع الصحيح المسمى صحيح مسلم.txt"
 
 db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
                      user="root",  # your username
@@ -26,6 +28,11 @@ listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding where Diacri
 cur.execute(listOfDiacritizedCharacterQuery)
 listOfDiacritizedCharacter = cur.fetchall()
 
+listOfWordsAndCorrespondingSentenceNumberQuery = "select * from ListOfWordsAndSentencesInEachDoc order by idword asc"
+
+cur.execute(listOfWordsAndCorrespondingSentenceNumberQuery)
+listOfWordsAndCorrespondingSentenceNumber = cur.fetchall()
+
 listOfRecordsInParsedDocumentQuery = "select * from ParsedDocument where UnDiacritizedCharacter!='.' and  " \
                                      "UnDiacritizedCharacter!='' order by idCharacterNumber asc "
 
@@ -33,55 +40,93 @@ cur.execute(listOfRecordsInParsedDocumentQuery)
 listOfRecordsInParsedDocument = cur.fetchall()
 
 test = listOfRecordsInParsedDocument[-1]
-seqLengths = listOfRecordsInParsedDocument[-1][5]
+numOfseqs = int(listOfRecordsInParsedDocument[-1][5])  # number of sentences
 numTimeSteps = len(listOfRecordsInParsedDocument)
 inputPatternSize = len(listOfUnDiacritizedCharacter)
 numOfLabels = len(listOfDiacritizedCharacter)
 maxLabelLength = len(listOfDiacritizedCharacter)  # I need to recheck it again
 maxTargetStringLength = 5000  # i need to recheck it again
-maxSeqTagLength = 800   # i need to recheck it again
+maxSeqTagLength = 800  # i need to recheck it again
 
 numTargetClasses = len(listOfDiacritizedCharacter)
 labels = []
 targetStrings = []
-for eachItem in range(0, len(listOfRecordsInParsedDocumentQuery)):
-    labels.append(listOfRecordsInParsedDocumentQuery[eachItem][3])
+seqTags = []
+seqLengths = []
+targetClasses = []
+seqTagsdim = maxSeqTagLength * numOfseqs
+sentence = ""
+
+for eachItem in range(0, len(listOfRecordsInParsedDocument)):
+    labels.append(listOfRecordsInParsedDocument[eachItem][3])
+
+counter = 1
+for eachItem in range(0, len(listOfWordsAndCorrespondingSentenceNumber)):
+    if int(listOfWordsAndCorrespondingSentenceNumber[eachItem][2]) == counter:
+        sentence += listOfWordsAndCorrespondingSentenceNumber[eachItem][1] + " "
+    else:
+        counter += 1
+        targetStrings.append(sentence)
+        sentence = ""
+        sentence += listOfWordsAndCorrespondingSentenceNumber[eachItem][1] + " "
+
+for x in range(1, seqTagsdim):
+    seqTags.append(docName);
+
+counter = 1
+length = 0
+for eachItem in range(0, len(listOfRecordsInParsedDocument)):
+    if int(listOfRecordsInParsedDocument[eachItem][5]) == counter:
+        length += 1
+    else:
+        length = length * 403
+        counter += 1
+        seqLengths.append(length)
+        length = 1
+
+flag = True;
+searchCounter = 0
+for eachItem in range(0, len(listOfRecordsInParsedDocument)):
+    yourLabel = listOfRecordsInParsedDocument[eachItem][3]
+    flag = True
+    while flag:
+        if listOfDiacritizedCharacter[searchCounter][1] == yourLabel:
+            flag = False
+            targetClasses.append(listOfDiacritizedCharacter[searchCounter][2])
+            searchCounter = 0
+        else:
+            searchCounter += 1
 
 
-for filename in seqTags:
-    print "reading image file", filename
-    image = Image.open(filename).transpose(Image.FLIP_TOP_BOTTOM).transpose(Image.ROTATE_270)
-    # image.getdata() returns the pixel value
-    # pixel value: number indicates how bright that pixel is, and/or what color it should be
-    # since the image has only white and black, so pixels values
-    # will be either 255 [white], or 0 [black]
-    for i in image.getdata():
-        inputs[offset][0] = (float(i) - inputMean) / inputStd
-        offset += 1
 
-outputFilename = "TestNCFile"
+
+
+x=1;
+'''
+#outputFilename = "TestNCFile"
 
 # create a new .nc file
-file = netcdf_helpers.NetCDFFile(outputFilename, 'w')
+#file = netcdf_helpers.NetCDFFile(outputFilename, 'w')
 
 # create the dimensions
-netcdf_helpers.createNcDim(file, 'numSeqs', len(seqLengths))
-netcdf_helpers.createNcDim(file, 'numTimesteps', len(inputs))
-netcdf_helpers.createNcDim(file, 'inputPattSize', len(inputs[0]))
-netcdf_helpers.createNcDim(file, 'numLabels', len(labels))
+netcdf_helpers.createNcDim(file, 'numSeqs', len(seqLengths));
+#netcdf_helpers.createNcDim(file, 'numTimesteps', len(inputs))
+#netcdf_helpers.createNcDim(file, 'inputPattSize', len(inputs[0]))
+netcdf_helpers.createNcDim(file, 'numLabels', len(labels));
 
 # create the variables
 
-netcdf_helpers.createNcStrings(file, 'labels', labels, ('numLabels', 'maxLabelLength'), 'labels')
+netcdf_helpers.createNcStrings(file, 'labels', labels, ('numLabels', 'maxLabelLength'), 'labels');
 netcdf_helpers.createNcStrings(file, 'targetStrings', targetStrings, ('numSeqs', 'maxTargStringLength'),
-                               'target strings')
-netcdf_helpers.createNcStrings(file, 'seqTags', seqTags, ('numSeqs', 'maxSeqTagLength'), 'sequence tags')
-netcdf_helpers.createNcVar(file, 'seqLengths', seqLengths, 'i', ('numSeqs',), 'sequence lengths')
-netcdf_helpers.createNcStrings(file, 'wordTargetStrings', wordTargetStrings, ('numSeqs', 'maxWordTargStringLength'),
-                               'target strings')
-netcdf_helpers.createNcVar(file, 'inputs', inputs, 'f', ('numTimesteps', 'inputPattSize'), 'input patterns')
+                               'target strings');
+#netcdf_helpers.createNcStrings(file, 'seqTags', seqTags, ('numSeqs', 'maxSeqTagLength'), 'sequence tags')
+#netcdf_helpers.createNcVar(file, 'seqLengths', seqLengths, 'i', ('numSeqs',), 'sequence lengths')
+#netcdf_helpers.createNcStrings(file, 'wordTargetStrings', wordTargetStrings, ('numSeqs', 'maxWordTargStringLength'),
+#                               'target strings')
+#netcdf_helpers.createNcVar(file, 'inputs', inputs, 'f', ('numTimesteps', 'inputPattSize'), 'input patterns')
 
 
 # write the data to disk
-print "writing data to", outputFilename
-file.close()
+#print "writing data to", outputFilename
+# file.close()
+'''
