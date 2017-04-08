@@ -13,17 +13,17 @@ import os, fnmatch
 # for textFile in findFiles(r'/home/mohamed/Desktop/MSTRepo/MSTRepo/PaperCorpus', '*.txt'):
 # print(textFile)
 
-docName = "الجامع الصحيح المسمى صحيح مسلم";
+docName = "الجامع الصحيح المسمى صحيح مسلم"
 diacritizedCharacter = []
 unDiacritizedCharacter = []
 listOfDBWords = []
-listOfDbSentenceNumber = [];
+listOfDbSentenceNumber = []
 
 f = open('/home/mohamed/Desktop/الجامع الصحيح المسمى صحيح مسلم.txt', 'r')
 read_data = f.readlines()
 f.close()
 
-listOfPunctuationBySymbol = [' .', ' :', '«', '»', '،', '؛', '؟', '.(', ').', ':(', '):', '» .']
+listOfPunctuationBySymbol = [' .', ' :', '«', '»', '،', '؛', '؟', '.(', ').', ':(', '):', '» .', '».']
 
 listOfArabicDiacriticsUnicode = [["064b", "064c", "064d", "064e", "064f", "0650", "0651", "0652"],
                                  [1, 2, 3, 4, 5, 6, 8, 7]]
@@ -37,7 +37,6 @@ for eachSentence in read_data:
     wordsInSentence = eachSentence.split()
     for word in wordsInSentence:
         word = re.sub('[-;}()0123456789/]', '', word)
-        word = re.sub('[.]', ' .', word)
         word = re.sub('["{"]', '', word)
         word = re.sub('[:]', ' :', word)
 
@@ -49,9 +48,17 @@ sentenceCount = 1
 for word in listOfWords:
 
     if not (word in listOfPunctuationBySymbol):
-        wordCount += 1
-        listOfWordsInSent.append([word, sentenceCount])
-        ListOfWordsWithPunctuation.append([word, sentenceCount])
+        if word.find('.') != -1:
+            ListOfWordsWithPunctuation.append([word, sentenceCount])
+
+            word = re.sub('[.]', '', word)
+            wordCount += 1
+            listOfWordsInSent.append([word, sentenceCount])
+            sentenceCount += 1
+        else:
+            wordCount += 1
+            listOfWordsInSent.append([word, sentenceCount])
+            ListOfWordsWithPunctuation.append([word, sentenceCount])
     else:
         ListOfWordsWithPunctuation.append([word, sentenceCount])
         sentenceCount += 1
@@ -64,6 +71,8 @@ listOfTargetSequenceEncodedWords = []
 # Encoding Target Sequence [Diacritized Character]
 for word in listOfWords:
     if not word in listOfPunctuationBySymbol:
+        if word.find('.') != -1:
+            word = re.sub('[.]', '', word)
         word = word.decode('utf-8', 'ignore')
 
         letterFoundFlag = False
@@ -117,6 +126,9 @@ listOfInputSequenceEncodedWords = []
 for word in listOfWords:
     if not word in listOfPunctuationBySymbol:
 
+        if word.find('.') != -1:
+            word = re.sub('[.]', '', word)
+
         word = word.decode('utf-8', 'ignore')
         nfkd_form = unicodedata.normalize('NFKD', word)
 
@@ -156,7 +168,8 @@ for word in listOfWords:
 
     if not word in listOfPunctuationBySymbol:
 
-
+        if word.find('.') != -1:
+            word = re.sub('[.]', '', word)
 
         word = word.decode('utf-8', 'ignore')
 
@@ -198,9 +211,9 @@ for word in listOfWords:
                 diacritizedCharacter.pop()
                 diacritizedCharacter.append(comp)
 
-#for word in listOfUnDiacritizedWord:
-    #for char in word:
-      #  unDiacritizedCharacter.append(char)
+            # for word in listOfUnDiacritizedWord:
+            # for char in word:
+            #  unDiacritizedCharacter.append(char)
 
 db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
                      user="root",  # your username
@@ -210,26 +223,26 @@ db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
                      charset="utf8",
                      init_command='SET NAMES UTF8')
 
-#cur = db.cursor()
+cur = db.cursor()
 
 # Part A : filling "Encoded Words" Table
-#for x in range(0, len(listOfInputSequenceEncodedWords)):
- #   cur.execute(
-  #      "INSERT INTO EncodedWords(InputSequenceEncodedWords,TargetSequenceEncodedWords,diacritizedCharacter,undiacritizedCharacter) VALUES (%s,%s,%s,%s)",
-   #     (listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x], diacritizedCharacter[x],
-    #     unDiacritizedCharacter[x]))
+for x in range(0, len(listOfInputSequenceEncodedWords)):
+    cur.execute(
+        "INSERT INTO EncodedWords(InputSequenceEncodedWords,TargetSequenceEncodedWords,diacritizedCharacter,"
+        "undiacritizedCharacter) VALUES (%s,%s,%s,%s)",
+        (listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x], diacritizedCharacter[x],
+         unDiacritizedCharacter[x]))
 
 cur = db.cursor()
-letterType= 'training'
+letterType = 'training'
 
 for x in range(0, len(listOfInputSequenceEncodedWords)):
-
     cur.execute(
         "INSERT INTO ParsedDocument(DocName, UnDiacritizedCharacter,DiacritizedCharacter,LetterType,SentenceNumber,"
         "Word, "
         "InputSequenceEncodedWords,TargetSequenceEncodedWords) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-        (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], letterType, listOfDbSentenceNumber[x], listOfDBWords[x],
-         listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x]))
+        (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], letterType, listOfDbSentenceNumber[x],
+         listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x]))
 
 db.commit()
 

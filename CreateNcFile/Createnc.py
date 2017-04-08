@@ -14,13 +14,38 @@ db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
 
 cur = db.cursor()
 
-listOfUnDiacritizedCharacterQuery = "select * from UnDiacOneHotEncoding where UnDiacritizedCharacter!='' and UnDiacritizedCharacter!='.'"
+listOfUnDiacritizedCharacterQuery = "select * from UnDiacOneHotEncoding where UnDiacritizedCharacter!='' and " \
+                                    "UnDiacritizedCharacter!='.' "
+
 cur.execute(listOfUnDiacritizedCharacterQuery)
 listOfUnDiacritizedCharacter = cur.fetchall()
 
-listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding where DiacritizedCharacter!='' and DiacritizedCharacter!='.'"
+listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding where DiacritizedCharacter!='' and " \
+                                  "DiacritizedCharacter!='.' "
+
 cur.execute(listOfDiacritizedCharacterQuery)
 listOfDiacritizedCharacter = cur.fetchall()
+
+listOfRecordsInParsedDocumentQuery = "select * from ParsedDocument where UnDiacritizedCharacter!='.' and  " \
+                                     "UnDiacritizedCharacter!='' order by idCharacterNumber asc "
+
+cur.execute(listOfRecordsInParsedDocumentQuery)
+listOfRecordsInParsedDocument = cur.fetchall()
+
+test = listOfRecordsInParsedDocument[-1]
+seqLengths = listOfRecordsInParsedDocument[-1][5]
+numTimeSteps = len(listOfRecordsInParsedDocument)
+inputPatternSize = len(listOfUnDiacritizedCharacter)
+numOfLabels = len(listOfDiacritizedCharacter)
+maxLabelLength = len(listOfDiacritizedCharacter)  # I need to recheck it again
+maxTargetStringLength = 5000  # i need to recheck it again
+maxSeqTagLength = 800   # i need to recheck it again
+
+numTargetClasses = len(listOfDiacritizedCharacter)
+labels = []
+targetStrings = []
+for eachItem in range(0, len(listOfRecordsInParsedDocumentQuery)):
+    labels.append(listOfRecordsInParsedDocumentQuery[eachItem][3])
 
 inputs = zeros((totalLen, 1), 'f')
 
