@@ -244,6 +244,11 @@ for x in range(0, len(listOfInputSequenceEncodedWords)):
         (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], letterType, listOfDbSentenceNumber[x],
          listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x]))
 
+for x in range(0, len(listOfWordsInSent)):
+    cur.execute(
+        "INSERT INTO ListOfWordsAndSentencesInEachDoc(word,SentenceNumber,DocName) VALUES (%s,%s,%s)",
+        (listOfWordsInSent[x][0], listOfWordsInSent[x][1], docName))
+
 db.commit()
 
 db.close()

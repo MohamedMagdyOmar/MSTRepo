@@ -47,7 +47,6 @@ targetStrings = []
 for eachItem in range(0, len(listOfRecordsInParsedDocumentQuery)):
     labels.append(listOfRecordsInParsedDocumentQuery[eachItem][3])
 
-inputs = zeros((totalLen, 1), 'f')
 
 for filename in seqTags:
     print "reading image file", filename
