@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
+
 # purpose of below code is :
 #  1- is to clean the document from punctuation symbol
 #  2- get document statistics
 #  3- create comma separated diacritized and undiacritized documents
 
-# -*- coding: utf-8 -*-
+
 import unicodedata
 import re
 import MySQLdb
@@ -12,7 +14,7 @@ docName = "الجامع الصحيح المسمى صحيح مسلم";
 listOfUndiacritizedCharacter = [];
 listOfDiacritizedCharacter = [];
 
-listOfPunctuationBySymbol = [' .', ' :', '«', '»', '،', '؛', '؟', '.(', ').', ':(', '):', '» .']
+listOfPunctuationBySymbol = [' .', ' :', '«', '»', '،', '؛', '؟', '.(', ').', ':(', '):', '» .','».']
 listOfPunctuationByCodePoint = ['060C', '061B', '061F', '003A', '002E']
 
 f = open("/home/mohamed/Desktop/الجامع الصحيح المسمى صحيح مسلم.txt", 'r')
@@ -29,7 +31,6 @@ for eachSentence in read_data:
     wordsInSentence = eachSentence.split()
     for word in wordsInSentence:
         word = re.sub('[-;}()0123456789/]', '', word)
-        word = re.sub('[.]', ' .', word)
         word = re.sub('["{"]', '', word)
         word = re.sub('[:]', ' :', word)
 
@@ -42,9 +43,17 @@ sentenceCount = 1
 for word in listOfWords:
 
     if not (word in listOfPunctuationBySymbol):
-        wordCount += 1
-        listOfWordsInSent.append([word, sentenceCount])
-        ListOfWordsWithPunctuation.append([word, sentenceCount])
+        if(word.find('.')!=-1):
+            ListOfWordsWithPunctuation.append([word, sentenceCount])
+
+            word = re.sub('[.]', '', word)
+            wordCount += 1
+            listOfWordsInSent.append([word, sentenceCount])
+            sentenceCount += 1
+        else:
+            wordCount += 1
+            listOfWordsInSent.append([word, sentenceCount])
+            ListOfWordsWithPunctuation.append([word, sentenceCount])
     else:
         ListOfWordsWithPunctuation.append([word, sentenceCount])
         sentenceCount += 1

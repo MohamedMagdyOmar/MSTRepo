@@ -41,7 +41,9 @@ one_hot_list__for_un_diacritized_characters, one_hot_list__for_diacritized_chara
     encoding.encodeMyCharacter(listOfUniqueUnDiacritizedCharacter, listOfDiacritizedCharacter)
 
 # filling "UnDiacOneHotEncoding and DiacOneHotEncoding" Tables
-
+print len(one_hot_list__for_un_diacritized_characters);
+print len(one_hot_list__for_diacritized_characters);
+'''
 for x in range(0, len(one_hot_list__for_un_diacritized_characters)):
     cur.execute("insert into UnDiacOneHotEncoding (UnDiacritizedCharacter,UnDiacritizedCharacterOneHotEncoding)"
                 " VALUES (%s,%s)",
@@ -55,3 +57,4 @@ for x in range(0, len(one_hot_list__for_diacritized_characters)):
 db.commit()
 
 db.close()
+'''
