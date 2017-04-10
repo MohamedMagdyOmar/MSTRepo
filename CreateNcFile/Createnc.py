@@ -4,6 +4,7 @@ import MySQLdb
 import datetime
 import numpy as np
 
+
 docName = "الجامع الصحيح المسمى صحيح مسلم.txt"
 
 db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
@@ -44,7 +45,7 @@ numOfseqs = int(listOfRecordsInParsedDocument[-1][5])  # number of sentences
 numTimeSteps = len(listOfRecordsInParsedDocument)
 inputPatternSize = len(listOfUnDiacritizedCharacter)
 numOfLabels = len(listOfDiacritizedCharacter)
-maxLabelLength = len(listOfDiacritizedCharacter)  # I need to recheck it again
+#  maxLabelLength = len(listOfDiacritizedCharacter)  # I need to recheck it again
 maxTargetStringLength = 5000  # i need to recheck it again
 maxSeqTagLength = 800  # i need to recheck it again
 
@@ -59,7 +60,7 @@ seqTagsdim = maxSeqTagLength * numOfseqs
 sentence = ""
 
 for eachItem in range(0, len(listOfRecordsInParsedDocument)):
-    yourLabel = (listOfRecordsInParsedDocument[eachItem][3]).encode('ascii', 'ignore')
+    yourLabel = str((listOfRecordsInParsedDocument[eachItem][10]))
     labels.append(yourLabel)
 
 counter = 1
@@ -137,7 +138,7 @@ for eachItem in range(0, len(listOfRecordsInParsedDocument)):
 print datetime.datetime.now();
 
 
-outputFilename = "TestNCFile"
+outputFilename = "TestNCFile.nc"
 
 # create a new .nc file
 file = netcdf_helpers.NetCDFFile(outputFilename, 'w')
@@ -149,6 +150,7 @@ netcdf_helpers.createNcDim(file, 'inputPattSize', 403)
 netcdf_helpers.createNcDim(file, 'numLabels', len(labels));
 
 # create the variables
+
 
 netcdf_helpers.createNcStrings(file, 'labels', labels, ('numLabels', 'maxLabelLength'), 'labels');
 netcdf_helpers.createNcStrings(file, 'targetStrings', targetStrings, ('numSeqs', 'maxTargStringLength'),

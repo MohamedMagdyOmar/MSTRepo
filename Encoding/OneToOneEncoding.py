@@ -67,7 +67,8 @@ prevCharWasDiac = False
 letterFoundFlag = False
 
 listOfTargetSequenceEncodedWords = []
-
+listOfTargetSequenceEncodedWordsInHexFormat = []
+listOfInputSequenceEncodedWordsInHexFormat = []
 # Encoding Target Sequence [Diacritized Character]
 for word in listOfWords:
     if not word in listOfPunctuationBySymbol:
@@ -87,11 +88,14 @@ for word in listOfWords:
 
                 binaryAsString = bin(int(hexAsString, 16))[2:].zfill(16)
                 integer = int(hexAsString, 16)
-                maskedInt = integer & 255;
+                maskedInt = integer & 255
                 maskedBinaryAsString = bin(integer & 255)[2:].zfill(16)
                 shiftedInt = maskedInt << 4
                 shiftedIntInBin = bin(shiftedInt)
+
+                listOfTargetSequenceEncodedWordsInHexFormat.append(hex(shiftedInt))
                 listOfTargetSequenceEncodedWords.append(bin(shiftedInt)[2:].zfill(16))
+                listOfInputSequenceEncodedWordsInHexFormat.append(hex(shiftedInt))
 
             elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':  # first diacritization
                 prevCharWasDiac = True
@@ -106,6 +110,8 @@ for word in listOfWords:
                 listOfTargetSequenceEncodedWords.pop()
                 listOfTargetSequenceEncodedWords.append(bin(integerDiacAfterORing)[2:].zfill(16))
 
+                listOfTargetSequenceEncodedWordsInHexFormat.pop()
+                listOfTargetSequenceEncodedWordsInHexFormat.append(hex(integerDiacAfterORing))
             elif prevCharWasDiac and c != u'ٔ' and c != u'ٕ':  # second diacritization
 
                 letterFoundFlag = False
@@ -118,6 +124,8 @@ for word in listOfWords:
                 integerSecDiacAfterORing = integerDiacAfterORing | integerSecDiac
                 listOfTargetSequenceEncodedWords.pop()
                 listOfTargetSequenceEncodedWords.append(bin(integerSecDiacAfterORing)[2:].zfill(16))
+                listOfTargetSequenceEncodedWordsInHexFormat.pop()
+                listOfTargetSequenceEncodedWordsInHexFormat.append(hex(integerSecDiacAfterORing))
 
 listOfUnDiacritizedWord = []
 listOfInputSequenceEncodedWords = []
@@ -161,7 +169,7 @@ second = ""
 third = ""
 overall = ""
 spaChar = unicodedata.normalize('NFC', word)
-loopCount = 0;
+loopCount = 0
 
 # extracting each character from words with its diacritization
 for word in listOfWords:
@@ -229,9 +237,11 @@ cur = db.cursor()
 for x in range(0, len(listOfInputSequenceEncodedWords)):
     cur.execute(
         "INSERT INTO EncodedWords(InputSequenceEncodedWords,TargetSequenceEncodedWords,diacritizedCharacter,"
-        "undiacritizedCharacter) VALUES (%s,%s,%s,%s)",
+        "undiacritizedCharacter,InputSequenceEncodedWordsInHexFormat,TargetSequenceEncodedWordsInHexFormat) VALUES ("
+        "%s,%s,%s,%s,%s,%s)",
         (listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x], diacritizedCharacter[x],
-         unDiacritizedCharacter[x]))
+         unDiacritizedCharacter[x], listOfInputSequenceEncodedWordsInHexFormat[x],
+         listOfTargetSequenceEncodedWordsInHexFormat[x]))
 
 cur = db.cursor()
 letterType = 'training'
@@ -240,15 +250,17 @@ for x in range(0, len(listOfInputSequenceEncodedWords)):
     cur.execute(
         "INSERT INTO ParsedDocument(DocName, UnDiacritizedCharacter,DiacritizedCharacter,LetterType,SentenceNumber,"
         "Word, "
-        "InputSequenceEncodedWords,TargetSequenceEncodedWords) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+        "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
+        "TargetSequenceEncodedWordsInHexFormat) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
         (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], letterType, listOfDbSentenceNumber[x],
-         listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x]))
-
+         listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
+         listOfInputSequenceEncodedWordsInHexFormat[x],listOfTargetSequenceEncodedWordsInHexFormat[x]))
+    '''
 for x in range(0, len(listOfWordsInSent)):
     cur.execute(
         "INSERT INTO ListOfWordsAndSentencesInEachDoc(word,SentenceNumber,DocName) VALUES (%s,%s,%s)",
         (listOfWordsInSent[x][0], listOfWordsInSent[x][1], docName))
-
+'''
 db.commit()
 
 db.close()
