@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import netcdf_helpers
 import MySQLdb
-from PIL import Image
+import datetime
 import numpy as np
 
 docName = "الجامع الصحيح المسمى صحيح مسلم.txt"
@@ -54,11 +54,13 @@ targetStrings = []
 seqTags = []
 seqLengths = []
 targetClasses = []
+input = set();
 seqTagsdim = maxSeqTagLength * numOfseqs
 sentence = ""
 
 for eachItem in range(0, len(listOfRecordsInParsedDocument)):
-    labels.append(listOfRecordsInParsedDocument[eachItem][3])
+    yourLabel = (listOfRecordsInParsedDocument[eachItem][3]).encode('ascii', 'ignore')
+    labels.append(yourLabel)
 
 counter = 1
 for eachItem in range(0, len(listOfWordsAndCorrespondingSentenceNumber)):
@@ -84,34 +86,66 @@ for eachItem in range(0, len(listOfRecordsInParsedDocument)):
         seqLengths.append(length)
         length = 1
 
+print datetime.datetime.now();
 flag = True;
 searchCounter = 0
+targetClasses = set();
 for eachItem in range(0, len(listOfRecordsInParsedDocument)):
     yourLabel = listOfRecordsInParsedDocument[eachItem][3]
     flag = True
     while flag:
         if listOfDiacritizedCharacter[searchCounter][1] == yourLabel:
             flag = False
-            targetClasses.append(listOfDiacritizedCharacter[searchCounter][2])
+            targetClasses.add(listOfDiacritizedCharacter[searchCounter][2])
+            searchCounter = 0
+        else:
+            searchCounter += 1
+'''
+queryResult = ""
+targetClasses = set();
+print datetime.datetime.now();
+
+for eachItem in range(0, len(listOfRecordsInParsedDocument)):
+    yourLabel = listOfRecordsInParsedDocument[eachItem][3]
+
+    yourLabel = yourLabel.encode('utf-8', 'ignore')
+    yourLabel = '"' + yourLabel +'"'
+    testQuery = "select DiacritizedCharacterOneHotEncoding from DiacOneHotEncoding where DiacritizedCharacter=" + yourLabel
+    cur.execute(testQuery)
+    queryResult = cur.fetchall()
+    targetClasses.add(test);
+
+print datetime.datetime.now();
+'''
+
+print datetime.datetime.now();
+
+flag = True;
+searchCounter = 0
+
+for eachItem in range(0, len(listOfRecordsInParsedDocument)):
+    yourLabel = listOfRecordsInParsedDocument[eachItem][2]
+    flag = True
+    while flag:
+        if listOfUnDiacritizedCharacter[searchCounter][1] == yourLabel:
+            flag = False
+            input.add(listOfUnDiacritizedCharacter[searchCounter][2])
             searchCounter = 0
         else:
             searchCounter += 1
 
+print datetime.datetime.now();
 
 
-
-
-x=1;
-'''
-#outputFilename = "TestNCFile"
+outputFilename = "TestNCFile"
 
 # create a new .nc file
-#file = netcdf_helpers.NetCDFFile(outputFilename, 'w')
+file = netcdf_helpers.NetCDFFile(outputFilename, 'w')
 
 # create the dimensions
 netcdf_helpers.createNcDim(file, 'numSeqs', len(seqLengths));
-#netcdf_helpers.createNcDim(file, 'numTimesteps', len(inputs))
-#netcdf_helpers.createNcDim(file, 'inputPattSize', len(inputs[0]))
+netcdf_helpers.createNcDim(file, 'numTimesteps', len(input))
+netcdf_helpers.createNcDim(file, 'inputPattSize', 403)
 netcdf_helpers.createNcDim(file, 'numLabels', len(labels));
 
 # create the variables
@@ -119,14 +153,14 @@ netcdf_helpers.createNcDim(file, 'numLabels', len(labels));
 netcdf_helpers.createNcStrings(file, 'labels', labels, ('numLabels', 'maxLabelLength'), 'labels');
 netcdf_helpers.createNcStrings(file, 'targetStrings', targetStrings, ('numSeqs', 'maxTargStringLength'),
                                'target strings');
-#netcdf_helpers.createNcStrings(file, 'seqTags', seqTags, ('numSeqs', 'maxSeqTagLength'), 'sequence tags')
-#netcdf_helpers.createNcVar(file, 'seqLengths', seqLengths, 'i', ('numSeqs',), 'sequence lengths')
+netcdf_helpers.createNcStrings(file, 'seqTags', seqTags, ('numSeqs', 'maxSeqTagLength'), 'sequence tags')
+netcdf_helpers.createNcVar(file, 'seqLengths', seqLengths, 'i', ('numSeqs',), 'sequence lengths')
 #netcdf_helpers.createNcStrings(file, 'wordTargetStrings', wordTargetStrings, ('numSeqs', 'maxWordTargStringLength'),
 #                               'target strings')
-#netcdf_helpers.createNcVar(file, 'inputs', inputs, 'f', ('numTimesteps', 'inputPattSize'), 'input patterns')
+netcdf_helpers.createNcVar(file, 'inputs', input, 'f', ('numTimesteps', 'inputPattSize'), 'input patterns')
 
 
 # write the data to disk
-#print "writing data to", outputFilename
-# file.close()
-'''
+print "writing data to", outputFilename
+file.close()
+
