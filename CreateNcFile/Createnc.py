@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-import netcdf_helpers
+import netCDF4 as netcdf_helpers
 import MySQLdb
+
 import datetime
 import numpy as np
 
@@ -10,7 +11,7 @@ docName = "الجامع الصحيح المسمى صحيح مسلم.txt"
 db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
                      user="root",  # your username
                      passwd="Islammega88",  # your password
-                     db="MSTDB",  # name of the data base
+                     db="mstdb",  # name of the data base
                      use_unicode=True,
                      charset="utf8",
                      init_command='SET NAMES UTF8')
