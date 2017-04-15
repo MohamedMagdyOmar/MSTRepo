@@ -142,13 +142,13 @@ print datetime.datetime.now();
 outputFilename = "TestNCFile.nc"
 
 # create a new .nc file
-file = netcdf_helpers.NetCDFFile(outputFilename, 'w')
+dataset = netcdf_helpers.Dataset(outputFilename, 'w', format='NETCDF4_CLASSIC')
 
 # create the dimensions
-netcdf_helpers.createNcDim(file, 'numSeqs', len(seqLengths));
-netcdf_helpers.createNcDim(file, 'numTimesteps', len(input))
-netcdf_helpers.createNcDim(file, 'inputPattSize', 403)
-netcdf_helpers.createNcDim(file, 'numLabels', len(labels));
+dataset.createDimension('numSeqs', len(seqLengths));
+dataset.createDimension('numTimesteps', len(input))
+dataset.createDimension('inputPattSize', 403)
+dataset.createDimension('numLabels', len(labels));
 
 # create the variables
 
