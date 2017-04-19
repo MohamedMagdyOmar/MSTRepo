@@ -159,8 +159,8 @@ netCDFInput[:] = purifiedInput
 netCDFSEQLengths = dataset.createVariable('netCDFSEQLengths', 'i4', ('numSeqs'))
 netCDFSEQLengths[:] = SEQLengths
 
-netCDFLabels = dataset.createVariable('netCDFLabels', 'i4', ('numTimeSteps', 'width'))
-netCDFLabels[:] = purifiedTargetClasses
+netCDFTargetClasse = dataset.createVariable('netCDFLabels', 'i4', ('numTimeSteps', 'width'))
+netCDFTargetClasse[:] = purifiedTargetClasses
 
 # write the data to disk
 print "writing data to", outputFilename
