@@ -1,168 +1,168 @@
-# -*- coding: utf-8 -*-
-import netcdf_helpers
+import netCDF4 as netcdf_helpers
 import MySQLdb
-import datetime
 import numpy as np
 
-
-docName = "الجامع الصحيح المسمى صحيح مسلم.txt"
 
 db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
                      user="root",  # your username
                      passwd="Islammega88",  # your password
-                     db="MSTDB",  # name of the data base
+                     db="mstdb",  # name of the data base
                      use_unicode=True,
                      charset="utf8",
                      init_command='SET NAMES UTF8')
 
 cur = db.cursor()
 
-listOfUnDiacritizedCharacterQuery = "select * from UnDiacOneHotEncoding where UnDiacritizedCharacter!='' and " \
-                                    "UnDiacritizedCharacter!='.' "
-
+listOfUnDiacritizedCharacterQuery = "select * from UnDiacOneHotEncoding"
 cur.execute(listOfUnDiacritizedCharacterQuery)
 listOfUnDiacritizedCharacter = cur.fetchall()
 
-listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding where DiacritizedCharacter!='' and " \
-                                  "DiacritizedCharacter!='.' "
 
+listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding "
 cur.execute(listOfDiacritizedCharacterQuery)
 listOfDiacritizedCharacter = cur.fetchall()
 
-listOfWordsAndCorrespondingSentenceNumberQuery = "select * from ListOfWordsAndSentencesInEachDoc order by idword asc"
 
-cur.execute(listOfWordsAndCorrespondingSentenceNumberQuery)
-listOfWordsAndCorrespondingSentenceNumber = cur.fetchall()
-
-listOfRecordsInParsedDocumentQuery = "select * from ParsedDocument where UnDiacritizedCharacter!='.' and  " \
-                                     "UnDiacritizedCharacter!='' order by idCharacterNumber asc "
-
+listOfRecordsInParsedDocumentQuery = "select * from ParsedDocument where SentenceNumber<=500 order by idCharacterNumber asc "
 cur.execute(listOfRecordsInParsedDocumentQuery)
 listOfRecordsInParsedDocument = cur.fetchall()
 
-test = listOfRecordsInParsedDocument[-1]
+
 numOfseqs = int(listOfRecordsInParsedDocument[-1][5])  # number of sentences
 numTimeSteps = len(listOfRecordsInParsedDocument)
 inputPatternSize = len(listOfUnDiacritizedCharacter)
 numOfLabels = len(listOfDiacritizedCharacter)
+
 #  maxLabelLength = len(listOfDiacritizedCharacter)  # I need to recheck it again
 maxTargetStringLength = 5000  # i need to recheck it again
 maxSeqTagLength = 800  # i need to recheck it again
 
-numTargetClasses = len(listOfDiacritizedCharacter)
+# numTargetClasses = len(listOfDiacritizedCharacter)
 labels = []
 targetStrings = []
 seqTags = []
 seqLengths = []
 targetClasses = []
-input = set();
-seqTagsdim = maxSeqTagLength * numOfseqs
+input = []
+# seqTagsdim = maxSeqTagLength * numOfseqs
 sentence = ""
 
-for eachItem in range(0, len(listOfRecordsInParsedDocument)):
-    yourLabel = str((listOfRecordsInParsedDocument[eachItem][10]))
-    labels.append(yourLabel)
-
-counter = 1
-for eachItem in range(0, len(listOfWordsAndCorrespondingSentenceNumber)):
-    if int(listOfWordsAndCorrespondingSentenceNumber[eachItem][2]) == counter:
-        sentence += listOfWordsAndCorrespondingSentenceNumber[eachItem][1] + " "
-    else:
-        counter += 1
-        targetStrings.append(sentence)
-        sentence = ""
-        sentence += listOfWordsAndCorrespondingSentenceNumber[eachItem][1] + " "
-
-for x in range(1, seqTagsdim):
-    seqTags.append(docName);
-
-counter = 1
-length = 0
-for eachItem in range(0, len(listOfRecordsInParsedDocument)):
-    if int(listOfRecordsInParsedDocument[eachItem][5]) == counter:
-        length += 1
-    else:
-        length = length * 403
-        counter += 1
-        seqLengths.append(length)
-        length = 1
-
-print datetime.datetime.now();
-flag = True;
+flag = True
 searchCounter = 0
-targetClasses = set();
+letterCounterForEachSentence = 0
+SEQLengths = []
+sentenceNumber = listOfRecordsInParsedDocument[0][5]
+# Create Data of SEQ Length Variable
 for eachItem in range(0, len(listOfRecordsInParsedDocument)):
-    yourLabel = listOfRecordsInParsedDocument[eachItem][3]
-    flag = True
-    while flag:
-        if listOfDiacritizedCharacter[searchCounter][1] == yourLabel:
-            flag = False
-            targetClasses.add(listOfDiacritizedCharacter[searchCounter][2])
-            searchCounter = 0
-        else:
-            searchCounter += 1
-'''
-queryResult = ""
-targetClasses = set();
-print datetime.datetime.now();
 
-for eachItem in range(0, len(listOfRecordsInParsedDocument)):
-    yourLabel = listOfRecordsInParsedDocument[eachItem][3]
+    if listOfRecordsInParsedDocument[eachItem][5] == sentenceNumber:
+        letterCounterForEachSentence += 1
+    else:
+        SEQLengths.append(letterCounterForEachSentence)
+        sentenceNumber = listOfRecordsInParsedDocument[eachItem][5]
+        letterCounterForEachSentence = 1
 
-    yourLabel = yourLabel.encode('utf-8', 'ignore')
-    yourLabel = '"' + yourLabel +'"'
-    testQuery = "select DiacritizedCharacterOneHotEncoding from DiacOneHotEncoding where DiacritizedCharacter=" + yourLabel
-    cur.execute(testQuery)
-    queryResult = cur.fetchall()
-    targetClasses.add(test);
-
-print datetime.datetime.now();
-'''
-
-print datetime.datetime.now();
-
-flag = True;
+flag = True
 searchCounter = 0
 
+# Create Data of Input Variable
 for eachItem in range(0, len(listOfRecordsInParsedDocument)):
     yourLabel = listOfRecordsInParsedDocument[eachItem][2]
     flag = True
     while flag:
         if listOfUnDiacritizedCharacter[searchCounter][1] == yourLabel:
             flag = False
-            input.add(listOfUnDiacritizedCharacter[searchCounter][2])
+            input.append(listOfUnDiacritizedCharacter[searchCounter][2])
             searchCounter = 0
         else:
             searchCounter += 1
 
-print datetime.datetime.now();
+
+# convert unicode to string
+input = [x.encode('ascii') for x in input]
+
+# convert array of string to array of char to be compatible with NETCDF
+# you will find strange values, but do not worry, it will exported correctly
+input = netcdf_helpers.stringtochar(np.array(input))
+
+str_list = []
+for eachItem in range(0, len(input)):
+    test = [x for x in input[eachItem] if (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
+    str_list.append(test)
+purifiedInput = netcdf_helpers.stringtochar(np.array(str_list))
+
+# extract one hot encoding column
+labels = [col[2] for col in listOfDiacritizedCharacter]
+
+# convert unicode to string
+labels = [x.encode('ascii') for x in labels]
+
+# convert array of string to array of char to be compatible with NETCDF
+# you will find strange values, but do not worry, it will exported correctly
+labels = netcdf_helpers.stringtochar(np.array(labels))
+str_list = []
+for eachItem in range(0, len(labels)):
+    test = [x for x in labels[eachItem] if (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
+    str_list.append(test)
+purifiedLabels = netcdf_helpers.stringtochar(np.array(str_list))
 
 
-outputFilename = "TestNCFile.nc"
+flag = True
+searchCounter = 0
+targetClasses = []
+
+for eachItem in range(0, len(listOfRecordsInParsedDocument)):
+    yourLabel = listOfRecordsInParsedDocument[eachItem][3]
+    flag = True
+    while flag:
+        if listOfDiacritizedCharacter[searchCounter][1] == yourLabel:
+            flag = False
+            targetClasses.append(listOfDiacritizedCharacter[searchCounter][2])
+            searchCounter = 0
+        else:
+            searchCounter += 1
+
+targetClasses = netcdf_helpers.stringtochar(np.array(targetClasses))
+
+str_list = []
+for eachItem in range(0, len(targetClasses)):
+    test = [x for x in targetClasses[eachItem] if (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
+    str_list.append(test)
+
+purifiedTargetClasses = str_list
+
+outputFilename = "NCFile.nc"
 
 # create a new .nc file
-file = netcdf_helpers.NetCDFFile(outputFilename, 'w')
+dataset = netcdf_helpers.Dataset(outputFilename, 'w', format='NETCDF4')
 
 # create the dimensions
-netcdf_helpers.createNcDim(file, 'numSeqs', len(seqLengths));
-netcdf_helpers.createNcDim(file, 'numTimesteps', len(input))
-netcdf_helpers.createNcDim(file, 'inputPattSize', 403)
-netcdf_helpers.createNcDim(file, 'numLabels', len(labels));
+# dataset.createDimension('numSeqs', len(seqLengths))
+inputPattSize = len(purifiedInput[0])
+maxLabelLength = len(purifiedLabels[0])
+dataset.createDimension('numTimesteps', len(input))
+dataset.createDimension('inputPattSize', len(purifiedInput[0]))
+dataset.createDimension('numLabels', len(labels))
+dataset.createDimension('maxLabelLength', len(purifiedLabels[0]))  # you get this value from the array 'labels'
+dataset.createDimension('numSeqs', len(SEQLengths))
+dataset.createDimension('numTimeSteps', len(purifiedTargetClasses))
+dataset.createDimension('width', len(purifiedTargetClasses[0]))
 
 # create the variables
 
+netCDFLabels = dataset.createVariable('netCDFLabels', 'S1', ('numLabels', 'maxLabelLength'))
+netCDFLabels[:] = purifiedLabels
 
-netcdf_helpers.createNcStrings(file, 'labels', labels, ('numLabels', 'maxLabelLength'), 'labels');
-netcdf_helpers.createNcStrings(file, 'targetStrings', targetStrings, ('numSeqs', 'maxTargStringLength'),
-                               'target strings');
-netcdf_helpers.createNcStrings(file, 'seqTags', seqTags, ('numSeqs', 'maxSeqTagLength'), 'sequence tags')
-netcdf_helpers.createNcVar(file, 'seqLengths', seqLengths, 'i', ('numSeqs',), 'sequence lengths')
-#netcdf_helpers.createNcStrings(file, 'wordTargetStrings', wordTargetStrings, ('numSeqs', 'maxWordTargStringLength'),
-#                               'target strings')
-netcdf_helpers.createNcVar(file, 'inputs', input, 'f', ('numTimesteps', 'inputPattSize'), 'input patterns')
+netCDFInput = dataset.createVariable('netCDFInput', 'S1', ('numTimesteps', 'inputPattSize'))
+netCDFInput[:] = purifiedInput
 
+netCDFSEQLengths = dataset.createVariable('netCDFSEQLengths', 'i4', ('numSeqs'))
+netCDFSEQLengths[:] = SEQLengths
+
+netCDFLabels = dataset.createVariable('netCDFLabels', 'i4', ('numTimeSteps', 'width'))
+netCDFLabels[:] = purifiedTargetClasses
 
 # write the data to disk
 print "writing data to", outputFilename
-file.close()
+#file.close()
 
