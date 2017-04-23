@@ -1,20 +1,23 @@
 import netCDF4 as netcdf_helpers
 import MySQLdb
 import numpy as np
+import datetime
 
 
 def createMySQLConnection():
     db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
                          user="root",  # your username
                          passwd="Islammega88",  # your password
-                         db="mstdb",  # name of the data base
+                         db="MSTDB",  # name of the data base
                          use_unicode=True,
                          charset="utf8",
                          init_command='SET NAMES UTF8')
     global cur
     cur = db.cursor()
 
+
 def excuteMySQLQueries():
+    excuteMySQLQueriesStartTime = datetime.datetime.now()
     listOfUnDiacritizedCharacterQuery = "select * from UnDiacOneHotEncoding"
     cur.execute(listOfUnDiacritizedCharacterQuery)
     global listOfUnDiacritizedCharacter
@@ -25,15 +28,22 @@ def excuteMySQLQueries():
     global listOfDiacritizedCharacter
     listOfDiacritizedCharacter = cur.fetchall()
 
-    listOfRecordsInParsedDocumentQuery = "select * from ParsedDocument where SentenceNumber<=500 order by idCharacterNumber asc "
+    listOfRecordsInParsedDocumentQuery = "select * from ParsedDocument where SentenceNumber<=10 order by idCharacterNumber asc "
     cur.execute(listOfRecordsInParsedDocumentQuery)
     global listOfRecordsInParsedDocument
     listOfRecordsInParsedDocument = cur.fetchall()
+    excuteMySQLQueriesEndTime = datetime.datetime.now()
+    print "excuteMySQLQueries takes : ", excuteMySQLQueriesEndTime - excuteMySQLQueriesStartTime
+
 
 def createNetCDFInput():
+    excutecreateNetCDFInputStartTime = datetime.datetime.now()
     flag = True
     searchCounter = 0
+
     input = []
+    global purifiedCDFInput
+    purifiedCDFInput = []
     # Create Data of Input Variable
     for eachItem in range(0, len(listOfRecordsInParsedDocument)):
         yourLabel = listOfRecordsInParsedDocument[eachItem][2]
@@ -41,29 +51,28 @@ def createNetCDFInput():
         while flag:
             if listOfUnDiacritizedCharacter[searchCounter][1] == yourLabel:
                 flag = False
-                input.append(listOfUnDiacritizedCharacter[searchCounter][2])
+                UnDiacritizedCharacterOneHotEncoding = (str(listOfUnDiacritizedCharacter[searchCounter][2]))
+
+                for eachItem in range(0, len(UnDiacritizedCharacterOneHotEncoding)):
+                    test = [x for x in UnDiacritizedCharacterOneHotEncoding[eachItem] if
+                            (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
+                    if len(test) != 0:
+                        input.append(int(test[0]))
+
                 searchCounter = 0
+
+                purifiedCDFInput.append(np.array(input))
+                input = []
             else:
                 searchCounter += 1
 
-    # convert unicode to string
-    input = [x.encode('ascii') for x in input]
+    excutecreateNetCDFInputEndTime = datetime.datetime.now()
+    print "createNetCDFInput takes : ", excutecreateNetCDFInputEndTime - excutecreateNetCDFInputStartTime
 
-    # convert array of string to array of char to be compatible with NETCDF
-    # you will find strange values, but do not worry, it will exported correctly
-    input = netcdf_helpers.stringtochar(np.array(input))
-
-    input_list_after_removing_spaces_and_dots = []
-    for eachItem in range(0, len(input)):
-        test = [x for x in input[eachItem] if
-                (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
-        input_list_after_removing_spaces_and_dots.append(test)
-    global purifiedInput
-    purifiedInput = netcdf_helpers.stringtochar(np.array(input_list_after_removing_spaces_and_dots))
 
 def createNetCDFSeqLength():
+    excutecreateNetCDFSeqLengthStartTime = datetime.datetime.now()
     letterCounterForEachSentence = 0
-
     global SEQLengths
     SEQLengths = []
     sentenceNumber = listOfRecordsInParsedDocument[0][5]
@@ -78,7 +87,12 @@ def createNetCDFSeqLength():
             sentenceNumber = listOfRecordsInParsedDocument[eachItem][5]
             letterCounterForEachSentence = 1
 
+    excutecreateNetCDFSeqLengthEndTime = datetime.datetime.now()
+    print "createNetCDFSeqLength takes : ", excutecreateNetCDFSeqLengthEndTime - excutecreateNetCDFSeqLengthStartTime
+
+
 def createNetCDFLabel():
+    excutecreateNetCDFLabelStartTime = datetime.datetime.now()
     # extract one hot encoding column
     labels = [col[2] for col in listOfDiacritizedCharacter]
 
@@ -96,11 +110,17 @@ def createNetCDFLabel():
     global purifiedLabels
     purifiedLabels = netcdf_helpers.stringtochar(np.array(label_list_after_removing_spaces_and_dots))
 
+    excutecreateNetCDFLabelEndTime = datetime.datetime.now()
+    print "createNetCDFLabel takes : ", excutecreateNetCDFLabelEndTime - excutecreateNetCDFLabelStartTime
+
+
 def createNetCDFTargetClasses():
+    excutecreateNetCDFTargetClassesStartTime = datetime.datetime.now()
+
     flag = True
     searchCounter = 0
     targetClasses = []
-
+    targetClasses_list_after_removing_spaces_and_dots = []
     for eachItem in range(0, len(listOfRecordsInParsedDocument)):
         yourLabel = listOfRecordsInParsedDocument[eachItem][3]
         flag = True
@@ -115,13 +135,39 @@ def createNetCDFTargetClasses():
     targetClasses = netcdf_helpers.stringtochar(np.array(targetClasses))
 
     targetClasses_list_after_removing_spaces_and_dots = []
-    for eachItem in range(0, len(targetClasses)):
-        test = [x for x in targetClasses[eachItem] if
+    for eachRow in range(0, len(targetClasses)):
+        for eachCol in range(0,len(targetClasses[eachRow])):
+            test = [x for x in targetClasses[eachRow][eachCol] if
                 (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
-        targetClasses_list_after_removing_spaces_and_dots.append(test)
+            if len(test) != 0:
+                targetClasses_list_after_removing_spaces_and_dots.append(int(test[0]))
+
 
     global purifiedTargetClasses
     purifiedTargetClasses = targetClasses_list_after_removing_spaces_and_dots
+
+    excutecreateNetCDFTargetClassesEndTime = datetime.datetime.now()
+    print "createNetCDFTargetClasses takes : ", excutecreateNetCDFTargetClassesEndTime - excutecreateNetCDFTargetClassesStartTime
+
+
+#  added due to error in running library
+def createSeqTags():
+    excutecreateSeqTagsStartTime = datetime.datetime.now()
+    global seqTagSentences
+    seqTagSentences = []
+    counter = 1
+    for eachItem in range(0, len(SEQLengths)):
+        sentenceNumber = counter
+
+        # converted to string because if int, the library will give error [Attempt to convert between text & numbers]
+        seqTagSentences.append(str(sentenceNumber))
+        counter += 1
+
+    seqTagSentences = (np.array(seqTagSentences))
+
+    excutecreateSeqTagsEndTime = datetime.datetime.now()
+    print "createSeqTags takes : ", excutecreateSeqTagsEndTime - excutecreateSeqTagsStartTime
+
 
 def createNetCDFFile():
     outputFilename = "NCFile.nc"
@@ -131,27 +177,33 @@ def createNetCDFFile():
 
     # create the dimensions
 
-    dataset.createDimension('numTimesteps', len(purifiedInput))
-    dataset.createDimension('inputPattSize', len(purifiedInput[0]))
+    dataset.createDimension('numTimesteps', len(purifiedCDFInput))
+    dataset.createDimension('inputPattSize', len(purifiedCDFInput[0]))
     dataset.createDimension('numLabels', len(purifiedLabels))
     dataset.createDimension('maxLabelLength', len(purifiedLabels[0]))  # you get this value from the array 'labels'
     dataset.createDimension('numSeqs', len(SEQLengths))
     dataset.createDimension('numTimeSteps', len(purifiedTargetClasses))
-    dataset.createDimension('width', len(purifiedTargetClasses[0]))
+#    dataset.createDimension('width', len(purifiedTargetClasses[0]))
+
+    #  added due to error in running library
+    dataset.createDimension('maxSeqTagLength', 1)
 
     # create the variables
 
-    netCDFLabels = dataset.createVariable('netCDFLabels', 'S1', ('numLabels', 'maxLabelLength'))
+    netCDFLabels = dataset.createVariable('labels', 'S1', ('numLabels', 'maxLabelLength'))
     netCDFLabels[:] = purifiedLabels
 
-    netCDFInput = dataset.createVariable('netCDFInput', 'S1', ('numTimesteps', 'inputPattSize'))
-    netCDFInput[:] = purifiedInput
+    netCDFInput = dataset.createVariable('inputs', 'i4', ('numTimesteps', 'inputPattSize'))
+    netCDFInput[:] = purifiedCDFInput
 
-    netCDFSEQLengths = dataset.createVariable('netCDFSEQLengths', 'i4', ('numSeqs'))
+    netCDFSEQLengths = dataset.createVariable('seqLengths', 'i4', ('numSeqs'))
     netCDFSEQLengths[:] = SEQLengths
 
-    netCDFTargetClasses = dataset.createVariable('netCDFTargetClasses', 'i4', ('numTimeSteps', 'width'))
+    netCDFTargetClasses = dataset.createVariable('targetClasses', 'i4', ('numTimeSteps'))
     netCDFTargetClasses[:] = purifiedTargetClasses
+
+    netCDFSeqTags = dataset.createVariable('seqTags', 'S1', ('numSeqs', 'maxSeqTagLength'))
+    netCDFSeqTags[:] = seqTagSentences
 
     # write the data to disk
     print "writing data to", outputFilename
@@ -165,19 +217,5 @@ if __name__ == "__main__":
     createNetCDFSeqLength()
     createNetCDFLabel()
     createNetCDFTargetClasses()
+    createSeqTags()
     createNetCDFFile()
-
-
-
-
-
-# numOfseqs = int(listOfRecordsInParsedDocument[-1][5])  # number of sentences
-# numTimeSteps = len(listOfRecordsInParsedDocument)
-# inputPatternSize = len(listOfUnDiacritizedCharacter)
-# numOfLabels = len(listOfDiacritizedCharacter)
-#
-# #  maxLabelLength = len(listOfDiacritizedCharacter)  # I need to recheck it again
-# maxTargetStringLength = 5000  # i need to recheck it again
-# maxSeqTagLength = 800  # i need to recheck it again
-
-
