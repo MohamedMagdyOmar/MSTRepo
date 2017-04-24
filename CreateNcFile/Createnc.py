@@ -86,7 +86,8 @@ def createNetCDFSeqLength():
             SEQLengths.append(letterCounterForEachSentence)
             sentenceNumber = listOfRecordsInParsedDocument[eachItem][5]
             letterCounterForEachSentence = 1
-
+            
+    SEQLengths.append(letterCounterForEachSentence)
     excutecreateNetCDFSeqLengthEndTime = datetime.datetime.now()
     print "createNetCDFSeqLength takes : ", excutecreateNetCDFSeqLengthEndTime - excutecreateNetCDFSeqLengthStartTime
 
