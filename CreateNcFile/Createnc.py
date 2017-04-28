@@ -8,7 +8,7 @@ def createMySQLConnection():
     db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
                          user="root",  # your username
                          passwd="Islammega88",  # your password
-                         db="MSTDB",  # name of the data base
+                         db="mstdb",  # name of the data base
                          use_unicode=True,
                          charset="utf8",
                          init_command='SET NAMES UTF8')
@@ -28,7 +28,7 @@ def excuteMySQLQueries():
     global listOfDiacritizedCharacter
     listOfDiacritizedCharacter = cur.fetchall()
 
-    listOfRecordsInParsedDocumentQuery = "select * from ParsedDocument where SentenceNumber<=10 order by idCharacterNumber asc "
+    listOfRecordsInParsedDocumentQuery = "select * from ParsedDocument where SentenceNumber=11 order by idCharacterNumber asc "
     cur.execute(listOfRecordsInParsedDocumentQuery)
     global listOfRecordsInParsedDocument
     listOfRecordsInParsedDocument = cur.fetchall()
@@ -169,9 +169,9 @@ def createSeqTags():
     excutecreateSeqTagsEndTime = datetime.datetime.now()
     print "createSeqTags takes : ", excutecreateSeqTagsEndTime - excutecreateSeqTagsStartTime
 
-
+###
 def createNetCDFFile():
-    outputFilename = "NCFile.nc"
+    outputFilename = "TestNCFile.nc"
 
     # create a new .nc file
     dataset = netcdf_helpers.Dataset(outputFilename, 'w', format='NETCDF4')
