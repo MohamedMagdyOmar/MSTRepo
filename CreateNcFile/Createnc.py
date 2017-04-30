@@ -16,7 +16,7 @@ def createMySQLConnection():
     cur = db.cursor()
 
 
-def excuteMySQLQueries():
+def excuteMySQLQueries(dataSetType):
     excuteMySQLQueriesStartTime = datetime.datetime.now()
     listOfUnDiacritizedCharacterQuery = "select * from UnDiacOneHotEncoding"
     cur.execute(listOfUnDiacritizedCharacterQuery)
@@ -28,7 +28,7 @@ def excuteMySQLQueries():
     global listOfDiacritizedCharacter
     listOfDiacritizedCharacter = cur.fetchall()
 
-    listOfRecordsInParsedDocumentQuery = "select * from ParsedDocument where SentenceNumber=11 order by idCharacterNumber asc "
+    listOfRecordsInParsedDocumentQuery = "select * from ParsedDocument where LetterType=" + "'%s'" % dataSetType + "and SentenceNumber<=48000 order by idCharacterNumber asc "
     cur.execute(listOfRecordsInParsedDocumentQuery)
     global listOfRecordsInParsedDocument
     listOfRecordsInParsedDocument = cur.fetchall()
@@ -86,7 +86,7 @@ def createNetCDFSeqLength():
             SEQLengths.append(letterCounterForEachSentence)
             sentenceNumber = listOfRecordsInParsedDocument[eachItem][5]
             letterCounterForEachSentence = 1
-            
+
     SEQLengths.append(letterCounterForEachSentence)
     excutecreateNetCDFSeqLengthEndTime = datetime.datetime.now()
     print "createNetCDFSeqLength takes : ", excutecreateNetCDFSeqLengthEndTime - excutecreateNetCDFSeqLengthStartTime
@@ -137,12 +137,11 @@ def createNetCDFTargetClasses():
 
     targetClasses_list_after_removing_spaces_and_dots = []
     for eachRow in range(0, len(targetClasses)):
-        for eachCol in range(0,len(targetClasses[eachRow])):
+        for eachCol in range(0, len(targetClasses[eachRow])):
             test = [x for x in targetClasses[eachRow][eachCol] if
-                (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
+                    (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
             if len(test) != 0:
                 targetClasses_list_after_removing_spaces_and_dots.append(int(test[0]))
-
 
     global purifiedTargetClasses
     purifiedTargetClasses = targetClasses_list_after_removing_spaces_and_dots
@@ -169,9 +168,10 @@ def createSeqTags():
     excutecreateSeqTagsEndTime = datetime.datetime.now()
     print "createSeqTags takes : ", excutecreateSeqTagsEndTime - excutecreateSeqTagsStartTime
 
+
 ###
-def createNetCDFFile():
-    outputFilename = "TestNCFile.nc"
+def createNetCDFFile(dataSetType):
+    outputFilename = dataSetType + "NCFile.nc"
 
     # create a new .nc file
     dataset = netcdf_helpers.Dataset(outputFilename, 'w', format='NETCDF4')
@@ -184,7 +184,7 @@ def createNetCDFFile():
     dataset.createDimension('maxLabelLength', len(purifiedLabels[0]))  # you get this value from the array 'labels'
     dataset.createDimension('numSeqs', len(SEQLengths))
     dataset.createDimension('numTimeSteps', len(purifiedTargetClasses))
-#    dataset.createDimension('width', len(purifiedTargetClasses[0]))
+    #    dataset.createDimension('width', len(purifiedTargetClasses[0]))
 
     #  added due to error in running library
     dataset.createDimension('maxSeqTagLength', 1)
@@ -212,11 +212,13 @@ def createNetCDFFile():
 
 
 if __name__ == "__main__":
-    createMySQLConnection()
-    excuteMySQLQueries()
-    createNetCDFInput()
-    createNetCDFSeqLength()
-    createNetCDFLabel()
-    createNetCDFTargetClasses()
-    createSeqTags()
-    createNetCDFFile()
+    availableDataSetTypes = ['training', 'validation', 'testing']
+    for x in range(0, len(availableDataSetTypes)):
+        createMySQLConnection()
+        excuteMySQLQueries(availableDataSetTypes[x])
+        createNetCDFInput()
+        createNetCDFSeqLength()
+        createNetCDFLabel()
+        createNetCDFTargetClasses()
+        createSeqTags()
+        createNetCDFFile(availableDataSetTypes[x])

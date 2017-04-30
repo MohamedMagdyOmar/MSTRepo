@@ -7,7 +7,7 @@ import numpy as np
 db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
                      user="root",  # your username
                      passwd="Islammega88",  # your password
-                     db="MSTDB",  # name of the data base
+                     db="mstdb",  # name of the data base
                      use_unicode=True,
                      charset="utf8",
                      init_command='SET NAMES UTF8')
@@ -43,7 +43,7 @@ one_hot_list__for_un_diacritized_characters, one_hot_list__for_diacritized_chara
 # filling "UnDiacOneHotEncoding and DiacOneHotEncoding" Tables
 print len(one_hot_list__for_un_diacritized_characters);
 print len(one_hot_list__for_diacritized_characters);
-'''
+
 for x in range(0, len(one_hot_list__for_un_diacritized_characters)):
     cur.execute("insert into UnDiacOneHotEncoding (UnDiacritizedCharacter,UnDiacritizedCharacterOneHotEncoding)"
                 " VALUES (%s,%s)",
@@ -57,4 +57,3 @@ for x in range(0, len(one_hot_list__for_diacritized_characters)):
 db.commit()
 
 db.close()
-'''
