@@ -20,15 +20,22 @@ def createMySQLConnection():
 
 
 def calculateTotalNumberOfSentences(dataSetType):
-    listOfSelectedSentencesQuery = "select * from ParsedDocument where LetterType=" + "'%s'" % dataSetType + \
-                                    "order by idCharacterNumber asc "
+    excutecalculateTotalNumberOfSentencesStartTime = datetime.datetime.now()
+
+    listOfSelectedSentencesQuery = "select * from ParsedDocument where LetterType=" + "'%s'" % dataSetType
 
     cur.execute(listOfSelectedSentencesQuery)
     global listOfSelectedSentences
     listOfSelectedSentences = []
     listOfSelectedSentences = cur.fetchall()
 
+    excutecalculateTotalNumberOfSentencesEndTime = datetime.datetime.now()
+    print "calculateTotalNumberOfSentences takes : ", excutecalculateTotalNumberOfSentencesEndTime - \
+                                                      excutecalculateTotalNumberOfSentencesStartTime
+
+
 def excuteUnChangedSQLQueries():
+    excuteUnChangedSQLQueriesStartTime = datetime.datetime.now()
 
     listOfUnDiacritizedCharacterQuery = "select * from UnDiacOneHotEncoding"
     cur.execute(listOfUnDiacritizedCharacterQuery)
@@ -38,51 +45,57 @@ def excuteUnChangedSQLQueries():
     listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding "
     cur.execute(listOfDiacritizedCharacterQuery)
     global listOfDiacritizedCharacter
+    listOfDiacritizedCharacter = []
     listOfDiacritizedCharacter = cur.fetchall()
+
+    excuteUnChangedSQLQueriesEndTime = datetime.datetime.now()
+    print "excuteUnChangedSQLQueries takes : ", excuteUnChangedSQLQueriesEndTime - \
+                                                excuteUnChangedSQLQueriesStartTime
 
 
 def excuteChangedSQLQueries(dataSetType, startRange, endRange):
     excuteMySQLQueriesStartTime = datetime.datetime.now()
-    listOfRecordsInParsedDocumentQuery = "select * from ParsedDocument where LetterType=" + "'%s'" % dataSetType +\
-                                         " and SentenceNumber>=" + startRange + " and SentenceNumber< " + endRange + \
-                                         " order by idCharacterNumber asc "
-    cur.execute(listOfRecordsInParsedDocumentQuery)
+
     global listOfRecordsInParsedDocument
     listOfRecordsInParsedDocument = []
-    listOfRecordsInParsedDocument = cur.fetchall()
+
+    listOfRecordsInParsedDocument = []
+    [listOfRecordsInParsedDocument.append(item) for item in listOfSelectedSentences
+     if int(startRange) <= int(item[5]) < int(endRange) and dataSetType == str(item[4])]
+
     excuteMySQLQueriesEndTime = datetime.datetime.now()
     print "excuteMySQLQueries takes : ", excuteMySQLQueriesEndTime - excuteMySQLQueriesStartTime
 
 
 def createNetCDFInput():
     excutecreateNetCDFInputStartTime = datetime.datetime.now()
-    flag = True
-    searchCounter = 0
 
-    input = []
+    correspondingCode = []
+    listOfExtractedCode = []
+
     global purifiedCDFInput
     purifiedCDFInput = []
     # Create Data of Input Variable
     for eachItem in range(0, len(listOfRecordsInParsedDocument)):
         yourLabel = listOfRecordsInParsedDocument[eachItem][2]
-        flag = True
-        while flag:
-            if listOfUnDiacritizedCharacter[searchCounter][1] == yourLabel:
-                flag = False
-                UnDiacritizedCharacterOneHotEncoding = (str(listOfUnDiacritizedCharacter[searchCounter][2]))
 
-                for eachItem in range(0, len(UnDiacritizedCharacterOneHotEncoding)):
-                    test = [x for x in UnDiacritizedCharacterOneHotEncoding[eachItem] if
-                            (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
-                    if len(test) != 0:
-                        input.append(int(test[0]))
 
-                searchCounter = 0
+        [correspondingCode.append(item) for item in listOfUnDiacritizedCharacter if yourLabel in
+                             item]
+        listOfExtractedCode.append(correspondingCode[eachItem][2])
 
-                purifiedCDFInput.append(np.array(input))
-                input = []
-            else:
-                searchCounter += 1
+    listNetCDFCode = netcdf_helpers.stringtochar(np.array(listOfExtractedCode))
+
+    input_list_after_removing_spaces_and_dots = []
+    for eachRow in range(0, len(listNetCDFCode)):
+        for eachCol in range(0, len(listNetCDFCode[eachRow])):
+            test = [x for x in listNetCDFCode[eachRow][eachCol] if
+                    (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
+            if len(test) != 0:
+                input_list_after_removing_spaces_and_dots.append(int(test[0]))
+
+    purifiedCDFInput.append(input_list_after_removing_spaces_and_dots)
+    input_list_after_removing_spaces_and_dots = []
 
     excutecreateNetCDFInputEndTime = datetime.datetime.now()
     print "createNetCDFInput takes : ", excutecreateNetCDFInputEndTime - excutecreateNetCDFInputStartTime
@@ -135,36 +148,34 @@ def createNetCDFLabel():
 
 
 def createNetCDFTargetClasses():
+
     excutecreateNetCDFTargetClassesStartTime = datetime.datetime.now()
 
-    flag = True
-    searchCounter = 0
-    targetClasses = []
-    targetClasses_list_after_removing_spaces_and_dots = []
+    correspondingCode = []
+    listOfExtractedCode = []
+    global purifiedTargetClasses
+    purifiedTargetClasses = []
+
     for eachItem in range(0, len(listOfRecordsInParsedDocument)):
         yourLabel = listOfRecordsInParsedDocument[eachItem][3]
-        flag = True
-        while flag:
-            if listOfDiacritizedCharacter[searchCounter][1] == yourLabel:
-                flag = False
-                targetClasses.append(listOfDiacritizedCharacter[searchCounter][2])
-                searchCounter = 0
-            else:
-                searchCounter += 1
 
-    targetClasses = netcdf_helpers.stringtochar(np.array(targetClasses))
+        [correspondingCode.append(item) for item in listOfDiacritizedCharacter if yourLabel in
+                             item]
+        listOfExtractedCode.append(correspondingCode[eachItem][2])
+
+    listNetCDFCode = netcdf_helpers.stringtochar(np.array(listOfExtractedCode))
+
 
     targetClasses_list_after_removing_spaces_and_dots = []
-    for eachRow in range(0, len(targetClasses)):
-        for eachCol in range(0, len(targetClasses[eachRow])):
-            test = [x for x in targetClasses[eachRow][eachCol] if
+    for eachRow in range(0, len(listNetCDFCode)):
+        for eachCol in range(0, len(listNetCDFCode[eachRow])):
+            test = [x for x in listNetCDFCode[eachRow][eachCol] if
                     (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
             if len(test) != 0:
                 targetClasses_list_after_removing_spaces_and_dots.append(int(test[0]))
 
-    global purifiedTargetClasses
-    purifiedTargetClasses = []
-    purifiedTargetClasses = targetClasses_list_after_removing_spaces_and_dots
+        purifiedTargetClasses.append(np.array(targetClasses_list_after_removing_spaces_and_dots))
+        targetClasses_list_after_removing_spaces_and_dots = []
 
     excutecreateNetCDFTargetClassesEndTime = datetime.datetime.now()
     print "createNetCDFTargetClasses takes : ", excutecreateNetCDFTargetClassesEndTime - excutecreateNetCDFTargetClassesStartTime
@@ -244,25 +255,26 @@ def resetAllLists():
     del purifiedTargetClasses[:]
     del seqTagSentences[:]
 if __name__ == "__main__":
+    patchSize = 500
     availableDataSetTypes = ['training']
     for x in range(0, len(availableDataSetTypes)):
         createMySQLConnection()
         calculateTotalNumberOfSentences(availableDataSetTypes[0])
-        excuteUnChangedSQLQueries()
         createNetCDFLabel()
+        excuteUnChangedSQLQueries()
         for punchOfSentences in range(0, len(listOfSelectedSentences), 500):
 
             startRange = str(punchOfSentences + int(listOfSelectedSentences[0][5]))
             print "start range:", startRange
-            punchOfSentences += 500
+            punchOfSentences += patchSize
             endRange = str(punchOfSentences + int(listOfSelectedSentences[0][5]))
             print "end range:", endRange
 
-            excuteChangedSQLQueries(availableDataSetTypes[x], startRange, endRange)
+            excuteChangedSQLQueries(availableDataSetTypes[0], startRange, endRange)
             createNetCDFInput()
             createNetCDFSeqLength()
 
             createNetCDFTargetClasses()
             createSeqTags()
-            createNetCDFFile(availableDataSetTypes[x])
-          #  resetAllLists()
+            createNetCDFFile(availableDataSetTypes[0])
+            x = 1
