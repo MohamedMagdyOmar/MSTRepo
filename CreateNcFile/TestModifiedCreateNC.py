@@ -255,13 +255,14 @@ def resetAllLists():
     del purifiedTargetClasses[:]
     del seqTagSentences[:]
 if __name__ == "__main__":
-    patchSize = 2000
+    patchSize = 500
     availableDataSetTypes = ['training']
     for x in range(0, len(availableDataSetTypes)):
         createMySQLConnection()
         calculateTotalNumberOfSentences(availableDataSetTypes[0])
+        createNetCDFLabel()
         excuteUnChangedSQLQueries()
-        for punchOfSentences in range(0, len(listOfSelectedSentences), 3000):
+        for punchOfSentences in range(0, len(listOfSelectedSentences), 500):
 
             startRange = str(punchOfSentences + int(listOfSelectedSentences[0][5]))
             print "start range:", startRange
@@ -272,7 +273,7 @@ if __name__ == "__main__":
             excuteChangedSQLQueries(availableDataSetTypes[0], startRange, endRange)
             createNetCDFInput()
             createNetCDFSeqLength()
-            createNetCDFLabel()
+
             createNetCDFTargetClasses()
             createSeqTags()
             createNetCDFFile(availableDataSetTypes[0])
