@@ -4,9 +4,24 @@ import unicodedata
 import MySQLdb
 import math
 import os
+import datetime
+
+diacritizedCharacter = []
+unDiacritizedCharacter = []
+listOfDBWords = []
+listOfDbSentenceNumber = []
+listOfPunctuationBySymbol = [u' .', u'.', u' :', u'«', u'»', u'،', u'؛', u'؟', u'.(', u').', u':(', u'):', u'» .', u'».']
+
+listOfArabicDiacriticsUnicode = [["064b", "064c", "064d", "064e", "064f", "0650", "0651", "0652"],
+                                 [1, 2, 3, 4, 5, 6, 8, 7]]
 
 
-# looping over all txt documents in a folder
+def declareGlobalVariables():
+    global wordCount
+    wordCount = 0
+    global sentenceCount
+    sentenceCount = 1
+
 def findFiles():
     global listOfFilesPathes
     global listOfDocName
@@ -17,16 +32,6 @@ def findFiles():
             listOfFilesPathes.append(os.path.join("D:\MasterRepo\MSTRepo\PaperCorpus\Doc", file))
             listOfDocName.append(file)
             print(os.path.join("D:\MasterRepo\MSTRepo\PaperCorpus\Doc", file))
-
-
-diacritizedCharacter = []
-unDiacritizedCharacter = []
-listOfDBWords = []
-listOfDbSentenceNumber = []
-listOfPunctuationBySymbol = [' .', ' :', '«', '»', '،', '؛', '؟', '.(', ').', ':(', '):', '» .', '».']
-
-listOfArabicDiacriticsUnicode = [["064b", "064c", "064d", "064e", "064f", "0650", "0651", "0652"],
-                                 [1, 2, 3, 4, 5, 6, 8, 7]]
 
 
 def readDoc(eachdoc):
@@ -44,11 +49,18 @@ def extractAndCleanWordsFromDoc():
     for eachSentence in read_data:
         wordsInSentence = eachSentence.split()
         for word in wordsInSentence:
-            word = re.sub('[-;}()0123456789/]', '', word)
-            word = re.sub('["{"]', '', word)
-            word = re.sub('[:]', ' :', word)
+            word = word.decode('utf-8', 'ignore') # variable line
 
-            if not (word == ''):
+            word = re.sub(u'[-;}()0123456789/]', '', word)
+            word = re.sub(u'["{"]', '', word)
+            word = re.sub(u'[:]', ' :', word)
+
+            word = re.sub(u'[ـ]', '', word)
+            word = re.sub(u'[`]', '', word)
+            word = re.sub(u'[[]', '', word)
+            word = re.sub(u'[]]', '', word)
+            word = re.sub(u'[L]', '', word)
+            if not (word == u''):
                 listOfWords.append(word)
 
 
@@ -56,23 +68,24 @@ def extractSentencesFromDoc():
     global wordCount
     global listOfWordsInSent
     global ListOfWordsWithPunctuation
-
-    wordCount = 0
+    global sentenceCount
+    #wordCount = 0
     listOfWordsInSent = []
     ListOfWordsWithPunctuation = []
-    sentenceCount = 1
+    #sentenceCount = 1
 
     if docName != 'quran-simple.txt':
         for word in listOfWords:
 
             if not (word in listOfPunctuationBySymbol):
-                if word.find('.') != -1:
+                if word.find(u'.') != -1:
                     wordCount += 1
 
                     ListOfWordsWithPunctuation.append([word, sentenceCount])
 
-                    word = re.sub('[.]', '', word)
-                    listOfWordsInSent.append([word, sentenceCount])
+                    word = re.sub(u'[.]', '', word)
+                    if word != u'':
+                        listOfWordsInSent.append([word, sentenceCount])
                     sentenceCount += 1
                 else:
                     wordCount += 1
@@ -106,9 +119,9 @@ def encodingDiacritizedCharacter():
 
     for word in listOfWords:
         if not word in listOfPunctuationBySymbol:
-            if word.find('.') != -1:
-                word = re.sub('[.]', '', word)
-            word = word.decode('utf-8', 'ignore')
+            if word.find(u'.') != -1:
+                word = re.sub(u'[.]', '', word)
+#            word = word.decode('utf-8', 'ignore') may be need to return itback
 
             nfkd_form = unicodedata.normalize('NFKD', word)
 
@@ -226,10 +239,10 @@ def extractEachCharacterFromWordWithItsDiacritization():
 
         if not word in listOfPunctuationBySymbol:
 
-            if word.find('.') != -1:
-                word = re.sub('[.]', '', word)
+            if word.find(u'.') != -1:
+                word = re.sub(u'[.]', '', word)
 
-            word = word.decode('utf-8', 'ignore')
+#            word = word.decode('utf-8', 'ignore') may be return back
 
             # removing diacritization from characters
             nfkd_form = unicodedata.normalize('NFKD', word)
@@ -289,9 +302,10 @@ def connectToDB():
 
 
 def pushDataIntoDB():
-    requiredPercentageForTesting = math.ceil((len(listOfInputSequenceEncodedWords) * 20) / 100)
-    counter = len(listOfInputSequenceEncodedWords) - requiredPercentageForTesting
-
+    requiredPercentageForValidation = math.ceil((len(listOfInputSequenceEncodedWords) * 15) / 100)
+    trainingCounter = len(listOfInputSequenceEncodedWords) - (requiredPercentageForValidation * 2)
+    isTrainingDataIsFinished = False
+    isValidationDataIsFinished = False
     # Part A : filling "Encoded Words" Table
     for x in range(0, len(listOfInputSequenceEncodedWords)):
         cur.execute(
@@ -303,39 +317,70 @@ def pushDataIntoDB():
              unDiacritizedCharacter[x], listOfInputSequenceEncodedWordsInHexFormat[x],
              listOfTargetSequenceEncodedWordsInHexFormat[x]))
 
-        if counter >= 0:
-            counter -= 1
-            cur.execute(
-                "INSERT INTO ParsedDocument(DocName, UnDiacritizedCharacter,DiacritizedCharacter,LetterType,"
-                "SentenceNumber, "
-                "Word, "
-                "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
-                "TargetSequenceEncodedWordsInHexFormat) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-                (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'training', listOfDbSentenceNumber[x],
-                 listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
-                 listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x]))
-        else:
-            cur.execute(
-                "INSERT INTO ParsedDocument(DocName, UnDiacritizedCharacter,DiacritizedCharacter,LetterType,"
-                "SentenceNumber, "
-                "Word, "
-                "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
-                "TargetSequenceEncodedWordsInHexFormat) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-                (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'testing', listOfDbSentenceNumber[x],
-                 listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
-                 listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x]))
-
-    for x in range(0, len(listOfWordsInSent)):
-        cur.execute(
-            "INSERT INTO ListOfWordsAndSentencesInEachDoc(word,SentenceNumber,DocName) VALUES (%s,%s,%s)",
-            (listOfWordsInSent[x][0], listOfWordsInSent[x][1], docName))
+    #     if (trainingCounter >= 0 or prevSentenceNumber == listOfDbSentenceNumber[x]) and \
+    #             (isTrainingDataIsFinished is False):
+    #         prevSentenceNumber = listOfDbSentenceNumber[x]
+    #         trainingCounter -= 1
+    #         cur.execute(
+    #             "INSERT INTO ParsedDocument(DocName, UnDiacritizedCharacter,DiacritizedCharacter,LetterType,"
+    #             "SentenceNumber, "
+    #             "Word, "
+    #             "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
+    #             "TargetSequenceEncodedWordsInHexFormat) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+    #             (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'training', listOfDbSentenceNumber[x],
+    #              listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
+    #              listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x]))
+    #     else:
+    #         isTrainingDataIsFinished = True
+    #         if (requiredPercentageForValidation >= 0 or prevSentenceNumber == listOfDbSentenceNumber[x]) and\
+    #                 (isValidationDataIsFinished is False):
+    #             prevSentenceNumber = listOfDbSentenceNumber[x]
+    #             requiredPercentageForValidation -= 1
+    #             cur.execute(
+    #                 "INSERT INTO ParsedDocument(DocName, UnDiacritizedCharacter,DiacritizedCharacter,LetterType,"
+    #                 "SentenceNumber, "
+    #                 "Word, "
+    #                 "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
+    #                 "TargetSequenceEncodedWordsInHexFormat) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+    #                 (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'validation', listOfDbSentenceNumber[x],
+    #                 listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
+    #                 listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x]))
+    #
+    #         else:
+    #             isValidationDataIsFinished = True
+    #             cur.execute(
+    #                 "INSERT INTO ParsedDocument(DocName, UnDiacritizedCharacter,DiacritizedCharacter,LetterType,"
+    #                 "SentenceNumber, "
+    #                 "Word, "
+    #                 "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
+    #                 "TargetSequenceEncodedWordsInHexFormat) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+    #                 (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'testing',
+    #                  listOfDbSentenceNumber[x],
+    #                  listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
+    #                  listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x]))
+    #
+    # for x in range(0, len(listOfWordsInSent)):
+    #     cur.execute(
+    #         "INSERT INTO ListOfWordsAndSentencesInEachDoc(word,SentenceNumber,DocName) VALUES (%s,%s,%s)",
+    #         (listOfWordsInSent[x][0], listOfWordsInSent[x][1], docName))
 
     db.commit()
     db.close()
 
+def resetAllLists():
+    del unDiacritizedCharacter[:]
+    del diacritizedCharacter[:]
+    del listOfDbSentenceNumber[:]
+    del listOfDBWords[:]
+    del listOfInputSequenceEncodedWords[:]
+    del listOfTargetSequenceEncodedWords[:]
+    del listOfInputSequenceEncodedWordsInHexFormat[:]
+    del listOfTargetSequenceEncodedWordsInHexFormat[:]
+    del listOfWordsInSent[:]
 
 if __name__ == "__main__":
     findFiles()
+    declareGlobalVariables()
     for eachDoc in range(0, len(listOfFilesPathes)):
         readDoc(eachDoc)
         extractAndCleanWordsFromDoc()
@@ -346,3 +391,4 @@ if __name__ == "__main__":
         extractEachCharacterFromWordWithItsDiacritization()
         connectToDB()
         pushDataIntoDB()
+        resetAllLists()

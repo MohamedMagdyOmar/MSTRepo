@@ -3,6 +3,9 @@ import MySQLdb
 import numpy as np
 import datetime
 
+global punchNumber
+punchNumber = 0
+
 
 def createMySQLConnection():
     db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
@@ -16,8 +19,17 @@ def createMySQLConnection():
     cur = db.cursor()
 
 
-def excuteMySQLQueries():
-    excuteMySQLQueriesStartTime = datetime.datetime.now()
+def calculateTotalNumberOfSentences(dataSetType):
+    listOfSelectedSentencesQuery = "select * from ParsedDocument where LetterType=" + "'%s'" % dataSetType + \
+                                    "order by idCharacterNumber asc "
+
+    cur.execute(listOfSelectedSentencesQuery)
+    global listOfSelectedSentences
+    listOfSelectedSentences = []
+    listOfSelectedSentences = cur.fetchall()
+
+def excuteUnChangedSQLQueries():
+
     listOfUnDiacritizedCharacterQuery = "select * from UnDiacOneHotEncoding"
     cur.execute(listOfUnDiacritizedCharacterQuery)
     global listOfUnDiacritizedCharacter
@@ -28,9 +40,15 @@ def excuteMySQLQueries():
     global listOfDiacritizedCharacter
     listOfDiacritizedCharacter = cur.fetchall()
 
-    listOfRecordsInParsedDocumentQuery = "select * from ParsedDocument where SentenceNumber=11 order by idCharacterNumber asc "
+
+def excuteChangedSQLQueries(dataSetType, startRange, endRange):
+    excuteMySQLQueriesStartTime = datetime.datetime.now()
+    listOfRecordsInParsedDocumentQuery = "select * from ParsedDocument where LetterType=" + "'%s'" % dataSetType +\
+                                         " and SentenceNumber>=" + startRange + " and SentenceNumber< " + endRange + \
+                                         " order by idCharacterNumber asc "
     cur.execute(listOfRecordsInParsedDocumentQuery)
     global listOfRecordsInParsedDocument
+    listOfRecordsInParsedDocument = []
     listOfRecordsInParsedDocument = cur.fetchall()
     excuteMySQLQueriesEndTime = datetime.datetime.now()
     print "excuteMySQLQueries takes : ", excuteMySQLQueriesEndTime - excuteMySQLQueriesStartTime
@@ -86,7 +104,7 @@ def createNetCDFSeqLength():
             SEQLengths.append(letterCounterForEachSentence)
             sentenceNumber = listOfRecordsInParsedDocument[eachItem][5]
             letterCounterForEachSentence = 1
-            
+
     SEQLengths.append(letterCounterForEachSentence)
     excutecreateNetCDFSeqLengthEndTime = datetime.datetime.now()
     print "createNetCDFSeqLength takes : ", excutecreateNetCDFSeqLengthEndTime - excutecreateNetCDFSeqLengthStartTime
@@ -109,6 +127,7 @@ def createNetCDFLabel():
                 (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
         label_list_after_removing_spaces_and_dots.append(test)
     global purifiedLabels
+    purifiedLabels = []
     purifiedLabels = netcdf_helpers.stringtochar(np.array(label_list_after_removing_spaces_and_dots))
 
     excutecreateNetCDFLabelEndTime = datetime.datetime.now()
@@ -137,14 +156,14 @@ def createNetCDFTargetClasses():
 
     targetClasses_list_after_removing_spaces_and_dots = []
     for eachRow in range(0, len(targetClasses)):
-        for eachCol in range(0,len(targetClasses[eachRow])):
+        for eachCol in range(0, len(targetClasses[eachRow])):
             test = [x for x in targetClasses[eachRow][eachCol] if
-                (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
+                    (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
             if len(test) != 0:
                 targetClasses_list_after_removing_spaces_and_dots.append(int(test[0]))
 
-
     global purifiedTargetClasses
+    purifiedTargetClasses = []
     purifiedTargetClasses = targetClasses_list_after_removing_spaces_and_dots
 
     excutecreateNetCDFTargetClassesEndTime = datetime.datetime.now()
@@ -169,9 +188,13 @@ def createSeqTags():
     excutecreateSeqTagsEndTime = datetime.datetime.now()
     print "createSeqTags takes : ", excutecreateSeqTagsEndTime - excutecreateSeqTagsStartTime
 
+
 ###
-def createNetCDFFile():
-    outputFilename = "TestNCFile.nc"
+def createNetCDFFile(dataSetType):
+    global punchNumber
+    punchNumber += 1
+    print "punch Number: ", punchNumber
+    outputFilename = dataSetType + "NCFile_" + str(punchNumber) + ".nc"
 
     # create a new .nc file
     dataset = netcdf_helpers.Dataset(outputFilename, 'w', format='NETCDF4')
@@ -184,7 +207,7 @@ def createNetCDFFile():
     dataset.createDimension('maxLabelLength', len(purifiedLabels[0]))  # you get this value from the array 'labels'
     dataset.createDimension('numSeqs', len(SEQLengths))
     dataset.createDimension('numTimeSteps', len(purifiedTargetClasses))
-#    dataset.createDimension('width', len(purifiedTargetClasses[0]))
+    #    dataset.createDimension('width', len(purifiedTargetClasses[0]))
 
     #  added due to error in running library
     dataset.createDimension('maxSeqTagLength', 1)
@@ -211,12 +234,34 @@ def createNetCDFFile():
     dataset.close()
 
 
+def resetAllLists():
+    global listOfSelectedSentences
+    listOfSelectedSentences= []
+    del listOfRecordsInParsedDocument[:]
+    del purifiedCDFInput[:]
+    del SEQLengths[:]
+    del purifiedLabels[:]
+    del purifiedTargetClasses[:]
+    del seqTagSentences[:]
 if __name__ == "__main__":
-    createMySQLConnection()
-    excuteMySQLQueries()
-    createNetCDFInput()
-    createNetCDFSeqLength()
-    createNetCDFLabel()
-    createNetCDFTargetClasses()
-    createSeqTags()
-    createNetCDFFile()
+    availableDataSetTypes = ['training']
+    for x in range(0, len(availableDataSetTypes)):
+        createMySQLConnection()
+        calculateTotalNumberOfSentences(availableDataSetTypes[0])
+        excuteUnChangedSQLQueries()
+        for punchOfSentences in range(0, len(listOfSelectedSentences), 500):
+
+            startRange = str(punchOfSentences + int(listOfSelectedSentences[0][5]))
+            print "start range:", startRange
+            punchOfSentences += 500
+            endRange = str(punchOfSentences + int(listOfSelectedSentences[0][5]))
+            print "end range:", endRange
+
+            excuteChangedSQLQueries(availableDataSetTypes[x], startRange, endRange)
+            createNetCDFInput()
+            createNetCDFSeqLength()
+            createNetCDFLabel()
+            createNetCDFTargetClasses()
+            createSeqTags()
+            createNetCDFFile(availableDataSetTypes[x])
+          #  resetAllLists()
