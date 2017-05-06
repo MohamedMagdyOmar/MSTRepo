@@ -1,5 +1,6 @@
 import netCDF4 as netcdf_helpers
 import MySQLdb
+import MySQLdb.cursors
 import numpy as np
 import datetime
 
@@ -7,11 +8,12 @@ global punchNumber
 punchNumber = 0
 
 
-def createMySQLConnection():
+def create_mysql_connection():
     db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
                          user="root",  # your username
                          passwd="Islammega88",  # your password
                          db="mstdb",  # name of the data base
+                         cursorclass=MySQLdb.cursors.SSCursor,
                          use_unicode=True,
                          charset="utf8",
                          init_command='SET NAMES UTF8')
@@ -22,7 +24,8 @@ def createMySQLConnection():
 def get_all_letters_of_corresponding_dataset_type(type_of_dataset):
     execute_calculate_total_number_Of_sentences_startTime = datetime.datetime.now()
 
-    listOfSelectedLettersAndSentencesQuery = "select UnDiacritizedCharacter, DiacritizedCharacter, LetterType, SentenceNumber," \
+    listOfSelectedLettersAndSentencesQuery = "select UnDiacritizedCharacter, DiacritizedCharacter, LetterType, " \
+                                             "SentenceNumber," \
                                              " Word, InputSequenceEncodedWords, TargetSequenceEncodedWords " \
                                              "from ParsedDocument where LetterType=" + "'%s'" % type_of_dataset
 
@@ -31,11 +34,13 @@ def get_all_letters_of_corresponding_dataset_type(type_of_dataset):
     listOfSelectedLettersAndSentences = []
     listOfSelectedLettersAndSentences = cur.fetchall()
 
-    excutecalculateTotalNumberOfSentencesEndTime = datetime.datetime.now()
-    print "get_all_letters_of_corresponding_dataset_type takes : ", excutecalculateTotalNumberOfSentencesEndTime - \
-                                                      execute_calculate_total_number_Of_sentences_startTime
-def excuteUnChangedSQLQueries():
-    excuteChangedSQLQueriesStartTime = datetime.datetime.now()
+    execute_calculate_total_number_of_sentence_end_time = datetime.datetime.now()
+    print "get_all_letters_of_corresponding_dataset_type takes : ", execute_calculate_total_number_of_sentence_end_time - \
+                                                                    execute_calculate_total_number_Of_sentences_startTime
+
+
+def execute_unchanged_sql_queries():
+    executeChangedSQLQueriesStartTime = datetime.datetime.now()
     listOfUnDiacritizedCharacterQuery = "select * from UnDiacOneHotEncoding"
     cur.execute(listOfUnDiacritizedCharacterQuery)
     global listOfUnDiacritizedCharacter
@@ -46,80 +51,12 @@ def excuteUnChangedSQLQueries():
     global listOfDiacritizedCharacter
     listOfDiacritizedCharacter = cur.fetchall()
 
-    excuteChangedSQLQueriesEndTime = datetime.datetime.now()
-    print "excuteChangedSQLQueries takes : ", excuteChangedSQLQueriesEndTime - excuteChangedSQLQueriesStartTime
-
-def excuteChangedSQLQueries(dataSetType, startRange, endRange):
-    excuteMySQLQueriesStartTime = datetime.datetime.now()
-    listOfRecordsInParsedDocumentQuery = "select * from ParsedDocument where LetterType=" + "'%s'" % dataSetType +\
-                                         " and SentenceNumber>=" + startRange + " and SentenceNumber< " + endRange + \
-                                         " order by idCharacterNumber asc "
-    cur.execute(listOfRecordsInParsedDocumentQuery)
-    global listOfRecordsInParsedDocument
-    listOfRecordsInParsedDocument = []
-    listOfRecordsInParsedDocument = cur.fetchall()
-    excuteMySQLQueriesEndTime = datetime.datetime.now()
-    print "excuteMySQLQueries takes : ", excuteMySQLQueriesEndTime - excuteMySQLQueriesStartTime
+    executeChangedSQLQueriesEndTime = datetime.datetime.now()
+    print "executeChangedSQLQueries takes : ", executeChangedSQLQueriesEndTime - executeChangedSQLQueriesStartTime
 
 
-def createNetCDFInput():
-    excutecreateNetCDFInputStartTime = datetime.datetime.now()
-    flag = True
-    searchCounter = 0
-
-    input = []
-    global purifiedCDFInput
-    purifiedCDFInput = []
-    # Create Data of Input Variable
-    for eachItem in range(0, len(listOfRecordsInParsedDocument)):
-        yourLabel = listOfRecordsInParsedDocument[eachItem][2]
-        flag = True
-        while flag:
-            if listOfUnDiacritizedCharacter[searchCounter][1] == yourLabel:
-                flag = False
-                UnDiacritizedCharacterOneHotEncoding = (str(listOfUnDiacritizedCharacter[searchCounter][2]))
-
-                for eachItem in range(0, len(UnDiacritizedCharacterOneHotEncoding)):
-                    test = [x for x in UnDiacritizedCharacterOneHotEncoding[eachItem] if
-                            (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
-                    if len(test) != 0:
-                        input.append(int(test[0]))
-
-                searchCounter = 0
-
-                purifiedCDFInput.append(np.array(input))
-                input = []
-            else:
-                searchCounter += 1
-
-    excutecreateNetCDFInputEndTime = datetime.datetime.now()
-    print "createNetCDFInput takes : ", excutecreateNetCDFInputEndTime - excutecreateNetCDFInputStartTime
-
-
-def createNetCDFSeqLength():
-    excutecreateNetCDFSeqLengthStartTime = datetime.datetime.now()
-    letterCounterForEachSentence = 0
-    global SEQLengths
-    SEQLengths = []
-    sentenceNumber = listOfRecordsInParsedDocument[0][5]
-
-    # Create Data of SEQ Length Variable
-    for eachItem in range(0, len(listOfRecordsInParsedDocument)):
-
-        if listOfRecordsInParsedDocument[eachItem][5] == sentenceNumber:
-            letterCounterForEachSentence += 1
-        else:
-            SEQLengths.append(letterCounterForEachSentence)
-            sentenceNumber = listOfRecordsInParsedDocument[eachItem][5]
-            letterCounterForEachSentence = 1
-
-    SEQLengths.append(letterCounterForEachSentence)
-    excutecreateNetCDFSeqLengthEndTime = datetime.datetime.now()
-    print "createNetCDFSeqLength takes : ", excutecreateNetCDFSeqLengthEndTime - excutecreateNetCDFSeqLengthStartTime
-
-
-def createNetCDFLabel():
-    excutecreateNetCDFLabelStartTime = datetime.datetime.now()
+def create_netcdf_label():
+    execute_create_netcdf_label_start_time = datetime.datetime.now()
     # extract one hot encoding column
     labels = [col[2] for col in listOfDiacritizedCharacter]
 
@@ -134,21 +71,87 @@ def createNetCDFLabel():
         test = [x for x in labels[eachItem] if
                 (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
         label_list_after_removing_spaces_and_dots.append(test)
-    global purifiedLabels
-    purifiedLabels = []
-    purifiedLabels = netcdf_helpers.stringtochar(np.array(label_list_after_removing_spaces_and_dots))
 
-    excutecreateNetCDFLabelEndTime = datetime.datetime.now()
-    print "createNetCDFLabel takes : ", excutecreateNetCDFLabelEndTime - excutecreateNetCDFLabelStartTime
+    global purified_labels
+    purified_labels = []
+    purified_labels = netcdf_helpers.stringtochar(np.array(label_list_after_removing_spaces_and_dots))
+
+    execute_create_netcdf_label_end_time = datetime.datetime.now()
+    print "create_netcdf_label takes : ", execute_create_netcdf_label_end_time - execute_create_netcdf_label_start_time
 
 
-def createNetCDFTargetClasses():
-    excutecreateNetCDFTargetClassesStartTime = datetime.datetime.now()
+def get_selected_letters_in_this_loop(start_range, end_range):
+    execute_get_selected_letters_in_this_loop_start_time = datetime.datetime.now()
+
+    global selected_letters_in_this_loop
+    selected_letters_in_this_loop = []
+
+    selected_letters_in_this_loop = [eachRow for eachRow in listOfSelectedLettersAndSentences if
+                                     int(start_range) <= int(eachRow[3]) < int(end_range)]
+
+    # selected_letters_in_this_loop = y
+    execute_get_selected_letters_in_this_loop_end_time = datetime.datetime.now()
+    print "executeChangedSQLQueries takes : ", \
+        execute_get_selected_letters_in_this_loop_end_time - execute_get_selected_letters_in_this_loop_start_time
+
+
+def create_netcdf_input():
+    execute_create_netcdf_Input_Start_Time = datetime.datetime.now()
+    searchCounter = 0
+
+    global purified_netcdf_input
+    purified_netcdf_input = []
+
+    # Create Data of Input Variable
+    for eachItem in range(0, len(selected_letters_in_this_loop)):
+        yourLabel = selected_letters_in_this_loop[eachItem][0]
+        flag = True
+        while flag:
+            if listOfUnDiacritizedCharacter[searchCounter][1] == yourLabel:
+                flag = False
+                UnDiacritizedCharacterOneHotEncoding = map(int,
+                                                           list(str(listOfUnDiacritizedCharacter[searchCounter][2])))
+                searchCounter = 0
+                purified_netcdf_input.append(np.array(UnDiacritizedCharacterOneHotEncoding))
+
+            else:
+                searchCounter += 1
+
+    execute_create_netcdf_Input_end_time = datetime.datetime.now()
+    print "createNetCDFInput takes : ", execute_create_netcdf_Input_end_time - execute_create_netcdf_Input_Start_Time
+
+
+def create_netcdf_seq_length():
+    execute_create_netcdf_seq_length_start_time = datetime.datetime.now()
+    letterCounterForEachSentence = 0
+    global seq_lengths
+    seq_lengths = []
+    sentenceNumber = selected_letters_in_this_loop[0][3]
+
+    # Create Data of SEQ Length Variable
+    for eachItem in range(0, len(selected_letters_in_this_loop)):
+
+        if selected_letters_in_this_loop[eachItem][3] == sentenceNumber:
+            letterCounterForEachSentence += 1
+        else:
+            seq_lengths.append(letterCounterForEachSentence)
+            sentenceNumber = selected_letters_in_this_loop[eachItem][3]
+            letterCounterForEachSentence = 1
+
+    seq_lengths.append(letterCounterForEachSentence)
+
+    execute_create_netcdf_seq_length_end_time = datetime.datetime.now()
+    print "createNetCDFSeqLength takes : ", execute_create_netcdf_seq_length_end_time - execute_create_netcdf_seq_length_start_time
+
+
+def create_netcdf_target_classes():
+    execute_create_netcdf_target_classes_start_time = datetime.datetime.now()
 
     searchCounter = 0
     targetClass = []
-    for eachItem in range(0, len(listOfRecordsInParsedDocument)):
-        yourLabel = listOfRecordsInParsedDocument[eachItem][3]
+    beforeWhileLoop = datetime.datetime.now()
+    for eachItem in range(0, len(selected_letters_in_this_loop)):
+        yourLabel = selected_letters_in_this_loop[eachItem][1]
         OneHotTargetClassNotFound = True
         while OneHotTargetClassNotFound:
             if listOfDiacritizedCharacter[searchCounter][1] == yourLabel:
@@ -157,123 +160,123 @@ def createNetCDFTargetClasses():
                 searchCounter = 0
             else:
                 searchCounter += 1
+    afterWhileLoop = datetime.datetime.now()
+    print "While Loop takes : ", afterWhileLoop - beforeWhileLoop
 
-    targetClasses = netcdf_helpers.stringtochar(np.array(targetClass))
+    targetClassAsNPArray = []
+    for eachItem in targetClass:
+        targetClassAsList = map(int, list(str(eachItem)))
+        targetClassAsNPArray.append(np.array(targetClassAsList))
 
-    targetClasses_list_after_removing_spaces_and_dots = []
-    for eachRow in range(0, len(targetClasses)):
-        for eachCol in range(0, len(targetClasses[eachRow])):
-            test = [x for x in targetClasses[eachRow][eachCol] if
-                    (x != '' and x != '.' and x != '[' and x != ']' and x != ' ' and x != '\n')]
-            if len(test) != 0:
-                targetClasses_list_after_removing_spaces_and_dots.append(int(test[0]))
+    targetClassAsNPArray = targetClassAsNPArray
 
-    global purifiedTargetClasses
-    purifiedTargetClasses = []
-    purifiedTargetClasses = targetClasses_list_after_removing_spaces_and_dots
-
-    excutecreateNetCDFTargetClassesEndTime = datetime.datetime.now()
-    print "createNetCDFTargetClasses takes : ", excutecreateNetCDFTargetClassesEndTime - excutecreateNetCDFTargetClassesStartTime
+    global purified_target_class
+    purified_target_class = []
+    purified_target_class = targetClassAsNPArray
+    purified_target_class = np.hstack(purified_target_class)
+    execute_create_netcdf_target_class_end_time = datetime.datetime.now()
+    print "createNetCDFTargetClasses takes : ", \
+        execute_create_netcdf_target_class_end_time - execute_create_netcdf_target_classes_start_time
 
 
 #  added due to error in running library
-def createSeqTags():
-    excutecreateSeqTagsStartTime = datetime.datetime.now()
-    global seqTagSentences
-    seqTagSentences = []
+def create_seq_tags():
+    execute_create_seq_tag_start_time = datetime.datetime.now()
+    global seq_tag_sentences
+    seq_tag_sentences = []
     counter = 1
-    for eachItem in range(0, len(SEQLengths)):
+    for eachItem in range(0, len(seq_lengths)):
         sentenceNumber = counter
 
-        # converted to string because if int, the library will give error [Attempt to convert between text & numbers]
-        seqTagSentences.append(str(sentenceNumber))
+        seq_tag_sentences.append(sentenceNumber)
         counter += 1
 
-    seqTagSentences = (np.array(seqTagSentences))
+    seq_tag_sentences = (np.array(seq_tag_sentences))
 
-    excutecreateSeqTagsEndTime = datetime.datetime.now()
-    print "createSeqTags takes : ", excutecreateSeqTagsEndTime - excutecreateSeqTagsStartTime
+    execute_create_seq_tag_end_time = datetime.datetime.now()
+    print "createSeqTags takes : ", execute_create_seq_tag_end_time - execute_create_seq_tag_start_time
 
 
-###
-def createNetCDFFile(dataSetType):
+def create_netcdf_file(dataset_type):
     global punchNumber
     punchNumber += 1
     print "punch Number: ", punchNumber
-    outputFilename = dataSetType + "NCFile_" + str(punchNumber) + ".nc"
+    outputFilename = dataset_type + "NCFile_" + str(punchNumber) + ".nc"
 
     # create a new .nc file
     dataset = netcdf_helpers.Dataset(outputFilename, 'w', format='NETCDF4')
 
     # create the dimensions
-
-    dataset.createDimension('numTimesteps', len(purifiedCDFInput))
-    dataset.createDimension('inputPattSize', len(purifiedCDFInput[0]))
-    dataset.createDimension('numLabels', len(purifiedLabels))
-    dataset.createDimension('maxLabelLength', len(purifiedLabels[0]))  # you get this value from the array 'labels'
-    dataset.createDimension('numSeqs', len(SEQLengths))
-    dataset.createDimension('numTimeSteps', len(purifiedTargetClasses))
-    #    dataset.createDimension('width', len(purifiedTargetClasses[0]))
+    dataset.createDimension('numTimesteps', len(purified_netcdf_input))
+    dataset.createDimension('inputPattSize', len(purified_netcdf_input[0]))
+    dataset.createDimension('numLabels', len(purified_labels))
+    dataset.createDimension('maxLabelLength', len(purified_labels[0]))  # you get this value from the array 'labels'
+    dataset.createDimension('numSeqs', len(seq_lengths))
+    dataset.createDimension('numTimeSteps', len(purified_target_class))
 
     #  added due to error in running library
     dataset.createDimension('maxSeqTagLength', 1)
 
     # create the variables
-
     netCDFLabels = dataset.createVariable('labels', 'S1', ('numLabels', 'maxLabelLength'))
-    netCDFLabels[:] = purifiedLabels
+    netCDFLabels[:] = purified_labels
 
     netCDFInput = dataset.createVariable('inputs', 'i4', ('numTimesteps', 'inputPattSize'))
-    netCDFInput[:] = purifiedCDFInput
+    netCDFInput[:] = purified_netcdf_input
 
-    netCDFSEQLengths = dataset.createVariable('seqLengths', 'i4', ('numSeqs'))
-    netCDFSEQLengths[:] = SEQLengths
+    netCDFSeq_lengths = dataset.createVariable('seq_lengths', 'i4', 'numSeqs')
+    netCDFSeq_lengths[:] = seq_lengths
 
-    netCDFTargetClasses = dataset.createVariable('targetClasses', 'i4', ('numTimeSteps'))
-    netCDFTargetClasses[:] = purifiedTargetClasses
+    netCDFTargetClasses = dataset.createVariable('targetClasses', 'i4', 'numTimeSteps')
+    netCDFTargetClasses[:] = purified_target_class
 
-    netCDFSeqTags = dataset.createVariable('seqTags', 'S1', ('numSeqs', 'maxSeqTagLength'))
-    netCDFSeqTags[:] = seqTagSentences
+    netCDFSeqTags = dataset.createVariable('seqTags', 'i4', ('numSeqs', 'maxSeqTagLength'))
+    netCDFSeqTags[:] = seq_tag_sentences
 
     # write the data to disk
     print "writing data to", outputFilename
     dataset.close()
 
 
-def resetAllLists():
-    global listOfSelectedLettersAndSentences
-    listOfSelectedLettersAndSentences = []
-    global listOfRecordsInParsedDocument
-    listOfRecordsInParsedDocument = []
-    # del listOfRecordsInParsedDocument[:]
-    del purifiedCDFInput[:]
-    del SEQLengths[:]
-    del purifiedLabels[:]
-    del purifiedTargetClasses[:]
-    del seqTagSentences[:]
+def try_using_query(letter):
+    before = datetime.datetime.now()
+    listOfSelectedLettersAndSentencesQuery = "select DiacritizedCharacterOneHotEncoding from " \
+                                             "diaconehotencoding where DiacritizedCharacter= " + "'%s'" % letter
+
+    cur.execute(listOfSelectedLettersAndSentencesQuery)
+    global test1
+    test1 = []
+    test1 = cur.fetchall()
+    after = datetime.datetime.now()
+    print "modification takes : ", after - before
+    return test1
+
+
 if __name__ == "__main__":
     availableDataSetTypes = ['training']
     patchSize = 500
     columnNumberOf_SentenceNumber = 3
 
     for x in range(0, len(availableDataSetTypes)):
-        createMySQLConnection()
+        create_mysql_connection()
         get_all_letters_of_corresponding_dataset_type(availableDataSetTypes[0])
-        excuteUnChangedSQLQueries()
-        createNetCDFLabel()
+        execute_unchanged_sql_queries()
+        create_netcdf_label()
         for punchOfSentences in range(0, len(listOfSelectedLettersAndSentences), patchSize):
-
-            startRange = str(punchOfSentences + int(listOfSelectedLettersAndSentences[0][columnNumberOf_SentenceNumber]))
+            startTime = datetime.datetime.now()
+            startRange = str(
+                punchOfSentences + int(listOfSelectedLettersAndSentences[0][columnNumberOf_SentenceNumber]))
             print "start range:", startRange
             punchOfSentences += patchSize
             endRange = str(punchOfSentences + int(listOfSelectedLettersAndSentences[0][columnNumberOf_SentenceNumber]))
             print "end range:", endRange
 
-            excuteChangedSQLQueries(availableDataSetTypes[x], startRange, endRange)
-            createNetCDFInput()
-            createNetCDFSeqLength()
+            get_selected_letters_in_this_loop(startRange, endRange)
+            create_netcdf_input()
+            create_netcdf_seq_length()
 
-            createNetCDFTargetClasses()
-            createSeqTags()
-            createNetCDFFile(availableDataSetTypes[x])
-            resetAllLists()
+            create_netcdf_target_classes()
+            create_seq_tags()
+            create_netcdf_file(availableDataSetTypes[x])
+            endTime = datetime.datetime.now()
+            print "over all time ", endTime - startTime
