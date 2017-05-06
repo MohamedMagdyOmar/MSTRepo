@@ -5,6 +5,7 @@ import datetime
 
 global punchNumber
 punchNumber = 0
+
 global sentenceNumberColumn
 sentenceNumberColumn = 3
 
