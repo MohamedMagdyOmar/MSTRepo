@@ -17,9 +17,9 @@ db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
 cur = db.cursor()
 
 
-listOfRecordsInParsedDocumentQuery = "select * from ParsedDocument where SentenceNumber<=500 order by idCharacterNumber asc "
-cur.execute(listOfRecordsInParsedDocumentQuery)
-listOfRecordsInParsedDocument = cur.fetchall()
+selected_letters_in_this_loopQuery = "select * from ParsedDocument where SentenceNumber<=500 order by idCharacterNumber asc "
+cur.execute(selected_letters_in_this_loopQuery)
+selected_letters_in_this_loop = cur.fetchall()
 
 listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding "
 cur.execute(listOfDiacritizedCharacterQuery)
@@ -30,8 +30,8 @@ flag = True
 searchCounter = 0
 targetClasses = []
 
-for eachItem in range(0, len(listOfRecordsInParsedDocument)):
-    yourLabel = listOfRecordsInParsedDocument[eachItem][3]
+for eachItem in range(0, len(selected_letters_in_this_loop)):
+    yourLabel = selected_letters_in_this_loop[eachItem][3]
     flag = True
     while flag:
         if listOfDiacritizedCharacter[searchCounter][1] == yourLabel:

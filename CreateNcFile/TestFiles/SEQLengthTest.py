@@ -17,9 +17,9 @@ db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
 
 cur = db.cursor()
 
-listOfRecordsInParsedDocument = "select * from ParsedDocument"
+selected_letters_in_this_loop = "select * from ParsedDocument"
 
-cur.execute(listOfRecordsInParsedDocument)
+cur.execute(selected_letters_in_this_loop)
 listOfParsedDoc = cur.fetchall()
 
 flag = True

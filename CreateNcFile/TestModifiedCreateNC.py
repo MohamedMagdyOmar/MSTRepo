@@ -20,7 +20,7 @@ def createMySQLConnection():
 
 
 def calculateTotalNumberOfSentences(dataSetType):
-    excutecalculateTotalNumberOfSentencesStartTime = datetime.datetime.now()
+    executecalculateTotalNumberOfSentencesStartTime = datetime.datetime.now()
 
     listOfSelectedSentencesQuery = "select * from ParsedDocument where LetterType=" + "'%s'" % dataSetType
 
@@ -29,13 +29,13 @@ def calculateTotalNumberOfSentences(dataSetType):
     listOfSelectedSentences = []
     listOfSelectedSentences = cur.fetchall()
 
-    excutecalculateTotalNumberOfSentencesEndTime = datetime.datetime.now()
-    print "calculateTotalNumberOfSentences takes : ", excutecalculateTotalNumberOfSentencesEndTime - \
-                                                      excutecalculateTotalNumberOfSentencesStartTime
+    executecalculateTotalNumberOfSentencesEndTime = datetime.datetime.now()
+    print "calculateTotalNumberOfSentences takes : ", executecalculateTotalNumberOfSentencesEndTime - \
+                                                      executecalculateTotalNumberOfSentencesStartTime
 
 
-def excuteUnChangedSQLQueries():
-    excuteUnChangedSQLQueriesStartTime = datetime.datetime.now()
+def executeUnChangedSQLQueries():
+    executeUnChangedSQLQueriesStartTime = datetime.datetime.now()
 
     listOfUnDiacritizedCharacterQuery = "select * from UnDiacOneHotEncoding"
     cur.execute(listOfUnDiacritizedCharacterQuery)
@@ -48,27 +48,27 @@ def excuteUnChangedSQLQueries():
     listOfDiacritizedCharacter = []
     listOfDiacritizedCharacter = cur.fetchall()
 
-    excuteUnChangedSQLQueriesEndTime = datetime.datetime.now()
-    print "excuteUnChangedSQLQueries takes : ", excuteUnChangedSQLQueriesEndTime - \
-                                                excuteUnChangedSQLQueriesStartTime
+    executeUnChangedSQLQueriesEndTime = datetime.datetime.now()
+    print "executeUnChangedSQLQueries takes : ", executeUnChangedSQLQueriesEndTime - \
+                                                executeUnChangedSQLQueriesStartTime
 
 
-def excuteChangedSQLQueries(dataSetType, startRange, endRange):
-    excuteMySQLQueriesStartTime = datetime.datetime.now()
+def executeChangedSQLQueries(dataSetType, startRange, endRange):
+    executeMySQLQueriesStartTime = datetime.datetime.now()
 
-    global listOfRecordsInParsedDocument
-    listOfRecordsInParsedDocument = []
+    global selected_letters_in_this_loop
+    selected_letters_in_this_loop = []
 
-    listOfRecordsInParsedDocument = []
-    [listOfRecordsInParsedDocument.append(item) for item in listOfSelectedSentences
+    selected_letters_in_this_loop = []
+    [selected_letters_in_this_loop.append(item) for item in listOfSelectedSentences
      if int(startRange) <= int(item[5]) < int(endRange) and dataSetType == str(item[4])]
 
-    excuteMySQLQueriesEndTime = datetime.datetime.now()
-    print "excuteMySQLQueries takes : ", excuteMySQLQueriesEndTime - excuteMySQLQueriesStartTime
+    executeMySQLQueriesEndTime = datetime.datetime.now()
+    print "executeMySQLQueries takes : ", executeMySQLQueriesEndTime - executeMySQLQueriesStartTime
 
 
 def createNetCDFInput():
-    excutecreateNetCDFInputStartTime = datetime.datetime.now()
+    executecreateNetCDFInputStartTime = datetime.datetime.now()
 
     correspondingCode = []
     listOfExtractedCode = []
@@ -76,8 +76,8 @@ def createNetCDFInput():
     global purifiedCDFInput
     purifiedCDFInput = []
     # Create Data of Input Variable
-    for eachItem in range(0, len(listOfRecordsInParsedDocument)):
-        yourLabel = listOfRecordsInParsedDocument[eachItem][2]
+    for eachItem in range(0, len(selected_letters_in_this_loop)):
+        yourLabel = selected_letters_in_this_loop[eachItem][2]
 
 
         [correspondingCode.append(item) for item in listOfUnDiacritizedCharacter if yourLabel in
@@ -97,34 +97,34 @@ def createNetCDFInput():
     purifiedCDFInput.append(input_list_after_removing_spaces_and_dots)
     input_list_after_removing_spaces_and_dots = []
 
-    excutecreateNetCDFInputEndTime = datetime.datetime.now()
-    print "createNetCDFInput takes : ", excutecreateNetCDFInputEndTime - excutecreateNetCDFInputStartTime
+    executecreateNetCDFInputEndTime = datetime.datetime.now()
+    print "createNetCDFInput takes : ", executecreateNetCDFInputEndTime - executecreateNetCDFInputStartTime
 
 
 def createNetCDFSeqLength():
-    excutecreateNetCDFSeqLengthStartTime = datetime.datetime.now()
+    executecreateNetCDFSeqLengthStartTime = datetime.datetime.now()
     letterCounterForEachSentence = 0
     global SEQLengths
     SEQLengths = []
-    sentenceNumber = listOfRecordsInParsedDocument[0][5]
+    sentenceNumber = selected_letters_in_this_loop[0][5]
 
     # Create Data of SEQ Length Variable
-    for eachItem in range(0, len(listOfRecordsInParsedDocument)):
+    for eachItem in range(0, len(selected_letters_in_this_loop)):
 
-        if listOfRecordsInParsedDocument[eachItem][5] == sentenceNumber:
+        if selected_letters_in_this_loop[eachItem][5] == sentenceNumber:
             letterCounterForEachSentence += 1
         else:
             SEQLengths.append(letterCounterForEachSentence)
-            sentenceNumber = listOfRecordsInParsedDocument[eachItem][5]
+            sentenceNumber = selected_letters_in_this_loop[eachItem][5]
             letterCounterForEachSentence = 1
 
     SEQLengths.append(letterCounterForEachSentence)
-    excutecreateNetCDFSeqLengthEndTime = datetime.datetime.now()
-    print "createNetCDFSeqLength takes : ", excutecreateNetCDFSeqLengthEndTime - excutecreateNetCDFSeqLengthStartTime
+    executecreateNetCDFSeqLengthEndTime = datetime.datetime.now()
+    print "createNetCDFSeqLength takes : ", executecreateNetCDFSeqLengthEndTime - executecreateNetCDFSeqLengthStartTime
 
 
-def createNetCDFLabel():
-    excutecreateNetCDFLabelStartTime = datetime.datetime.now()
+def create_netcdf_label():
+    executecreate_netcdf_labelStartTime = datetime.datetime.now()
     # extract one hot encoding column
     labels = [col[2] for col in listOfDiacritizedCharacter]
 
@@ -143,21 +143,21 @@ def createNetCDFLabel():
     purifiedLabels = []
     purifiedLabels = netcdf_helpers.stringtochar(np.array(label_list_after_removing_spaces_and_dots))
 
-    excutecreateNetCDFLabelEndTime = datetime.datetime.now()
-    print "createNetCDFLabel takes : ", excutecreateNetCDFLabelEndTime - excutecreateNetCDFLabelStartTime
+    executecreate_netcdf_labelEndTime = datetime.datetime.now()
+    print "create_netcdf_label takes : ", executecreate_netcdf_labelEndTime - executecreate_netcdf_labelStartTime
 
 
 def createNetCDFTargetClasses():
 
-    excutecreateNetCDFTargetClassesStartTime = datetime.datetime.now()
+    executecreateNetCDFTargetClassesStartTime = datetime.datetime.now()
 
     correspondingCode = []
     listOfExtractedCode = []
     global purifiedTargetClasses
     purifiedTargetClasses = []
 
-    for eachItem in range(0, len(listOfRecordsInParsedDocument)):
-        yourLabel = listOfRecordsInParsedDocument[eachItem][3]
+    for eachItem in range(0, len(selected_letters_in_this_loop)):
+        yourLabel = selected_letters_in_this_loop[eachItem][3]
 
         [correspondingCode.append(item) for item in listOfDiacritizedCharacter if yourLabel in
                              item]
@@ -177,13 +177,13 @@ def createNetCDFTargetClasses():
         purifiedTargetClasses.append(np.array(targetClasses_list_after_removing_spaces_and_dots))
         targetClasses_list_after_removing_spaces_and_dots = []
 
-    excutecreateNetCDFTargetClassesEndTime = datetime.datetime.now()
-    print "createNetCDFTargetClasses takes : ", excutecreateNetCDFTargetClassesEndTime - excutecreateNetCDFTargetClassesStartTime
+    executecreateNetCDFTargetClassesEndTime = datetime.datetime.now()
+    print "createNetCDFTargetClasses takes : ", executecreateNetCDFTargetClassesEndTime - executecreateNetCDFTargetClassesStartTime
 
 
 #  added due to error in running library
 def createSeqTags():
-    excutecreateSeqTagsStartTime = datetime.datetime.now()
+    executecreateSeqTagsStartTime = datetime.datetime.now()
     global seqTagSentences
     seqTagSentences = []
     counter = 1
@@ -196,8 +196,8 @@ def createSeqTags():
 
     seqTagSentences = (np.array(seqTagSentences))
 
-    excutecreateSeqTagsEndTime = datetime.datetime.now()
-    print "createSeqTags takes : ", excutecreateSeqTagsEndTime - excutecreateSeqTagsStartTime
+    executecreateSeqTagsEndTime = datetime.datetime.now()
+    print "createSeqTags takes : ", executecreateSeqTagsEndTime - executecreateSeqTagsStartTime
 
 
 ###
@@ -248,7 +248,7 @@ def createNetCDFFile(dataSetType):
 def resetAllLists():
     global listOfSelectedSentences
     listOfSelectedSentences= []
-    del listOfRecordsInParsedDocument[:]
+    del selected_letters_in_this_loop[:]
     del purifiedCDFInput[:]
     del SEQLengths[:]
     del purifiedLabels[:]
@@ -260,8 +260,8 @@ if __name__ == "__main__":
     for x in range(0, len(availableDataSetTypes)):
         createMySQLConnection()
         calculateTotalNumberOfSentences(availableDataSetTypes[0])
-        createNetCDFLabel()
-        excuteUnChangedSQLQueries()
+        create_netcdf_label()
+        executeUnChangedSQLQueries()
         for punchOfSentences in range(0, len(listOfSelectedSentences), 500):
 
             startRange = str(punchOfSentences + int(listOfSelectedSentences[0][5]))
@@ -270,7 +270,7 @@ if __name__ == "__main__":
             endRange = str(punchOfSentences + int(listOfSelectedSentences[0][5]))
             print "end range:", endRange
 
-            excuteChangedSQLQueries(availableDataSetTypes[0], startRange, endRange)
+            executeChangedSQLQueries(availableDataSetTypes[0], startRange, endRange)
             createNetCDFInput()
             createNetCDFSeqLength()
 

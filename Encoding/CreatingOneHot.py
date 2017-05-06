@@ -40,19 +40,25 @@ for x in range(0, len(listOfDiacritizedCharacter)):
 one_hot_list__for_un_diacritized_characters, one_hot_list__for_diacritized_characters = \
     encoding.encodeMyCharacter(listOfUniqueUnDiacritizedCharacter, listOfDiacritizedCharacter)
 
+UnDiacritizedOneHotInNDimArrayForm = np.array(one_hot_list__for_un_diacritized_characters)
+UnDiacritizedOneHotInNDimArrayForm = UnDiacritizedOneHotInNDimArrayForm.astype(np.int8)
+
+diacritizedOneHotInNDimArrayForm = np.array(one_hot_list__for_diacritized_characters)
+diacritizedOneHotInNDimArrayForm = diacritizedOneHotInNDimArrayForm.astype(np.int8)
 # filling "UnDiacOneHotEncoding and DiacOneHotEncoding" Tables
-print len(one_hot_list__for_un_diacritized_characters);
-print len(one_hot_list__for_diacritized_characters);
+print len(one_hot_list__for_un_diacritized_characters)
+print len(one_hot_list__for_diacritized_characters)
+
 
 for x in range(0, len(one_hot_list__for_un_diacritized_characters)):
     cur.execute("insert into UnDiacOneHotEncoding (UnDiacritizedCharacter,UnDiacritizedCharacterOneHotEncoding)"
                 " VALUES (%s,%s)",
-                (listOfUniqueUnDiacritizedCharacter[x], one_hot_list__for_un_diacritized_characters[x]))
+                (listOfUniqueUnDiacritizedCharacter[x], UnDiacritizedOneHotInNDimArrayForm[x]))
 
 for x in range(0, len(one_hot_list__for_diacritized_characters)):
     cur.execute("insert into DiacOneHotEncoding (DiacritizedCharacter,DiacritizedCharacterOneHotEncoding)"
                 " VALUES (%s,%s)",
-                (listOfDiacritizedCharacter[x], one_hot_list__for_diacritized_characters[x]))
+                (listOfDiacritizedCharacter[x], diacritizedOneHotInNDimArrayForm[x]))
 
 db.commit()
 
