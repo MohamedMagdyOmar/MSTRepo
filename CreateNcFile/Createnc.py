@@ -80,15 +80,15 @@ def create_netcdf_label():
     print "create_netcdf_label takes : ", execute_create_netcdf_label_end_time - execute_create_netcdf_label_start_time
 
 
-def get_selected_letters_in_this_loop(start_range, end_range):
+def get_selected_letters_in_this_loop(): #(start_range, end_range):
     execute_get_selected_letters_in_this_loop_start_time = datetime.datetime.now()
 
     global selected_letters_in_this_loop
     selected_letters_in_this_loop = []
 
-    selected_letters_in_this_loop = [eachRow for eachRow in listOfSelectedLettersAndSentences if
-                                     int(start_range) <= int(eachRow[3]) < int(end_range)]
-
+    # selected_letters_in_this_loop = [eachRow for eachRow in listOfSelectedLettersAndSentences if
+    #                                 int(start_range) <= int(eachRow[3]) < int(end_range)]
+    selected_letters_in_this_loop = listOfSelectedLettersAndSentences
     # selected_letters_in_this_loop = y
     execute_get_selected_letters_in_this_loop_end_time = datetime.datetime.now()
     print "executeChangedSQLQueries takes : ", \
@@ -101,7 +101,7 @@ def create_netcdf_input():
 
     global purified_netcdf_input
     purified_netcdf_input = []
-
+    test = []
     # Create Data of Input Variable
     for eachItem in range(0, len(selected_letters_in_this_loop)):
         yourLabel = selected_letters_in_this_loop[eachItem][0]
@@ -112,11 +112,11 @@ def create_netcdf_input():
                 UnDiacritizedCharacterOneHotEncoding = map(int,
                                                            list(str(listOfUnDiacritizedCharacter[searchCounter][2])))
                 searchCounter = 0
+                test.append(np.array(UnDiacritizedCharacterOneHotEncoding))
                 purified_netcdf_input.append(np.array(UnDiacritizedCharacterOneHotEncoding))
-
             else:
                 searchCounter += 1
-
+    # purified_netcdf_input = (np.array(test))
     execute_create_netcdf_Input_end_time = datetime.datetime.now()
     print "createNetCDFInput takes : ", execute_create_netcdf_Input_end_time - execute_create_netcdf_Input_Start_Time
 
@@ -138,7 +138,7 @@ def create_netcdf_seq_length():
             sentenceNumber = selected_letters_in_this_loop[eachItem][3]
             letterCounterForEachSentence = 1
 
-    seq_lengths.append(letterCounterForEachSentence)
+    seq_lengths.append(letterCounterForEachSentence) #hereeeeeeeeeeeeeeeeeeeeeeeeeee
 
     execute_create_netcdf_seq_length_end_time = datetime.datetime.now()
     print "createNetCDFSeqLength takes : ", execute_create_netcdf_seq_length_end_time - execute_create_netcdf_seq_length_start_time
@@ -156,24 +156,26 @@ def create_netcdf_target_classes():
         while OneHotTargetClassNotFound:
             if listOfDiacritizedCharacter[searchCounter][1] == yourLabel:
                 OneHotTargetClassNotFound = False
-                targetClass.append(listOfDiacritizedCharacter[searchCounter][2])
+                targetClass.append(listOfDiacritizedCharacter[searchCounter][0])
                 searchCounter = 0
             else:
                 searchCounter += 1
     afterWhileLoop = datetime.datetime.now()
     print "While Loop takes : ", afterWhileLoop - beforeWhileLoop
 
-    targetClassAsNPArray = []
-    for eachItem in targetClass:
-        targetClassAsList = map(int, list(str(eachItem)))
-        targetClassAsNPArray.append(np.array(targetClassAsList))
+    # targetClassAsNPArray = []
+    #for eachItem in targetClass:
+    #    targetClassAsList = map(int, list(str(eachItem)))
+    # targetClassAsNPArray.append(np.array(targetClass))
 
-    targetClassAsNPArray = targetClassAsNPArray
+    # targetClassAsNPArray = targetClassAsNPArray
 
     global purified_target_class
     purified_target_class = []
-    purified_target_class = targetClassAsNPArray
-    purified_target_class = np.hstack(purified_target_class)
+    # purified_target_class = targetClassAsNPArray
+    # purified_target_class = np.hstack(purified_target_class)
+
+    purified_target_class = np.array(targetClass)
     execute_create_netcdf_target_class_end_time = datetime.datetime.now()
     print "createNetCDFTargetClasses takes : ", \
         execute_create_netcdf_target_class_end_time - execute_create_netcdf_target_classes_start_time
@@ -188,7 +190,7 @@ def create_seq_tags():
     for eachItem in range(0, len(seq_lengths)):
         sentenceNumber = counter
 
-        seq_tag_sentences.append(sentenceNumber)
+        seq_tag_sentences.append(str(sentenceNumber))
         counter += 1
 
     seq_tag_sentences = (np.array(seq_tag_sentences))
@@ -212,7 +214,7 @@ def create_netcdf_file(dataset_type):
     dataset.createDimension('numLabels', len(purified_labels))
     dataset.createDimension('maxLabelLength', len(purified_labels[0]))  # you get this value from the array 'labels'
     dataset.createDimension('numSeqs', len(seq_lengths))
-    dataset.createDimension('numTimeSteps', len(purified_target_class))
+
 
     #  added due to error in running library
     dataset.createDimension('maxSeqTagLength', 1)
@@ -224,14 +226,16 @@ def create_netcdf_file(dataset_type):
     netCDFInput = dataset.createVariable('inputs', 'i4', ('numTimesteps', 'inputPattSize'))
     netCDFInput[:] = purified_netcdf_input
 
-    netCDFSeq_lengths = dataset.createVariable('seq_lengths', 'i4', 'numSeqs')
+    netCDFSeq_lengths = dataset.createVariable('seqLengths', 'i4', 'numSeqs')
     netCDFSeq_lengths[:] = seq_lengths
 
-    netCDFTargetClasses = dataset.createVariable('targetClasses', 'i4', 'numTimeSteps')
+    netCDFTargetClasses = dataset.createVariable('targetClasses', 'i4', 'numTimesteps')
     netCDFTargetClasses[:] = purified_target_class
 
-    netCDFSeqTags = dataset.createVariable('seqTags', 'i4', ('numSeqs', 'maxSeqTagLength'))
+    netCDFSeqTags = dataset.createVariable('seqTags', 'S1', ('numSeqs', 'maxSeqTagLength'))
     netCDFSeqTags[:] = seq_tag_sentences
+
+
 
     # write the data to disk
     print "writing data to", outputFilename
@@ -253,30 +257,30 @@ def try_using_query(letter):
 
 
 if __name__ == "__main__":
-    availableDataSetTypes = ['training']
+    availableDataSetTypes = ['testing']
     patchSize = 500
     columnNumberOf_SentenceNumber = 3
 
-    for x in range(0, len(availableDataSetTypes)):
-        create_mysql_connection()
-        get_all_letters_of_corresponding_dataset_type(availableDataSetTypes[0])
-        execute_unchanged_sql_queries()
-        create_netcdf_label()
-        for punchOfSentences in range(0, len(listOfSelectedLettersAndSentences), patchSize):
-            startTime = datetime.datetime.now()
-            startRange = str(
-                punchOfSentences + int(listOfSelectedLettersAndSentences[0][columnNumberOf_SentenceNumber]))
-            print "start range:", startRange
-            punchOfSentences += patchSize
-            endRange = str(punchOfSentences + int(listOfSelectedLettersAndSentences[0][columnNumberOf_SentenceNumber]))
-            print "end range:", endRange
+    #for x in range(0, len(availableDataSetTypes)):
+    create_mysql_connection()
+    get_all_letters_of_corresponding_dataset_type(availableDataSetTypes[0])
+    execute_unchanged_sql_queries()
+    create_netcdf_label()
+        # for punchOfSentences in range(0, len(listOfSelectedLettersAndSentences)):
+    startTime = datetime.datetime.now()
+        # startRange = str(
+        # punchOfSentences + int(listOfSelectedLettersAndSentences[0][columnNumberOf_SentenceNumber]))
+        # print "start range:", startRange
+        # punchOfSentences += patchSize
+        # endRange = str(punchOfSentences + int(listOfSelectedLettersAndSentences[0][columnNumberOf_SentenceNumber]))
+        # print "end range:", endRange
 
-            get_selected_letters_in_this_loop(startRange, endRange)
-            create_netcdf_input()
-            create_netcdf_seq_length()
+    get_selected_letters_in_this_loop()
+    create_netcdf_input()
+    create_netcdf_seq_length()
 
-            create_netcdf_target_classes()
-            create_seq_tags()
-            create_netcdf_file(availableDataSetTypes[x])
-            endTime = datetime.datetime.now()
-            print "over all time ", endTime - startTime
+    create_netcdf_target_classes()
+    create_seq_tags()
+    create_netcdf_file('testing')
+    endTime = datetime.datetime.now()
+    print "over all time ", endTime - startTime
