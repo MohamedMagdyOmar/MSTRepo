@@ -80,16 +80,15 @@ def create_netcdf_label():
     print "create_netcdf_label takes : ", execute_create_netcdf_label_end_time - execute_create_netcdf_label_start_time
 
 
-def get_selected_letters_in_this_loop(): #(start_range, end_range):
+def get_selected_letters_in_this_loop(start_range, end_range):
     execute_get_selected_letters_in_this_loop_start_time = datetime.datetime.now()
 
     global selected_letters_in_this_loop
     selected_letters_in_this_loop = []
 
-    # selected_letters_in_this_loop = [eachRow for eachRow in listOfSelectedLettersAndSentences if
-    #                                 int(start_range) <= int(eachRow[3]) < int(end_range)]
-    selected_letters_in_this_loop = listOfSelectedLettersAndSentences
-    # selected_letters_in_this_loop = y
+    selected_letters_in_this_loop = [eachRow for eachRow in listOfSelectedLettersAndSentences if
+                                    int(start_range) <= int(eachRow[3]) < int(end_range)]
+
     execute_get_selected_letters_in_this_loop_end_time = datetime.datetime.now()
     print "executeChangedSQLQueries takes : ", \
         execute_get_selected_letters_in_this_loop_end_time - execute_get_selected_letters_in_this_loop_start_time
@@ -215,7 +214,6 @@ def create_netcdf_file(dataset_type):
     dataset.createDimension('maxLabelLength', len(purified_labels[0]))  # you get this value from the array 'labels'
     dataset.createDimension('numSeqs', len(seq_lengths))
 
-
     #  added due to error in running library
     dataset.createDimension('maxSeqTagLength', 1)
 
@@ -234,8 +232,6 @@ def create_netcdf_file(dataset_type):
 
     netCDFSeqTags = dataset.createVariable('seqTags', 'S1', ('numSeqs', 'maxSeqTagLength'))
     netCDFSeqTags[:] = seq_tag_sentences
-
-
 
     # write the data to disk
     print "writing data to", outputFilename
@@ -257,30 +253,31 @@ def try_using_query(letter):
 
 
 if __name__ == "__main__":
-    availableDataSetTypes = ['testing']
-    patchSize = 500
+    availableDataSetTypes = ['validation']
+    patchSize = 1
     columnNumberOf_SentenceNumber = 3
 
-    #for x in range(0, len(availableDataSetTypes)):
-    create_mysql_connection()
-    get_all_letters_of_corresponding_dataset_type(availableDataSetTypes[0])
-    execute_unchanged_sql_queries()
-    create_netcdf_label()
-        # for punchOfSentences in range(0, len(listOfSelectedLettersAndSentences)):
-    startTime = datetime.datetime.now()
-        # startRange = str(
-        # punchOfSentences + int(listOfSelectedLettersAndSentences[0][columnNumberOf_SentenceNumber]))
-        # print "start range:", startRange
-        # punchOfSentences += patchSize
-        # endRange = str(punchOfSentences + int(listOfSelectedLettersAndSentences[0][columnNumberOf_SentenceNumber]))
-        # print "end range:", endRange
+    for x in range(0, len(availableDataSetTypes)):
+        create_mysql_connection()
+        get_all_letters_of_corresponding_dataset_type(availableDataSetTypes[0])
+        execute_unchanged_sql_queries()
+        create_netcdf_label()
+        for punchOfSentences in range(0, len(listOfSelectedLettersAndSentences), patchSize):
+            startTime = datetime.datetime.now()
+            startRange = str(
+            punchOfSentences + int(listOfSelectedLettersAndSentences[0][columnNumberOf_SentenceNumber]))
+            print "start range:", startRange
+            punchOfSentences += patchSize
+            endRange = str(punchOfSentences + int(listOfSelectedLettersAndSentences[0][columnNumberOf_SentenceNumber]))
+            print "end range:", endRange
 
-    get_selected_letters_in_this_loop()
-    create_netcdf_input()
-    create_netcdf_seq_length()
+            get_selected_letters_in_this_loop(startRange, endRange)
+            create_netcdf_input()
+            create_netcdf_seq_length()
 
-    create_netcdf_target_classes()
-    create_seq_tags()
-    create_netcdf_file('testing')
-    endTime = datetime.datetime.now()
-    print "over all time ", endTime - startTime
+            create_netcdf_target_classes()
+            create_seq_tags()
+            create_netcdf_file('testing')
+            endTime = datetime.datetime.now()
+            print "over all time ", endTime - startTime
+        break

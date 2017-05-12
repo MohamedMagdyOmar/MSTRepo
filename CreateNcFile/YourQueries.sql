@@ -54,3 +54,10 @@ SET SQL_SAFE_UPDATES = 0;
 UPDATE undiaconehotencoding SET UnDiacritizedCharacterOneHotEncoding = REPLACE(UnDiacritizedCharacterOneHotEncoding, ' ', '');
 UPDATE undiaconehotencoding SET UnDiacritizedCharacterOneHotEncoding = REPLACE(UnDiacritizedCharacterOneHotEncoding, '[', '');
 UPDATE undiaconehotencoding SET UnDiacritizedCharacterOneHotEncoding = REPLACE(UnDiacritizedCharacterOneHotEncoding, ']', '');
+
+
+-- reset auto increment column
+SET SQL_SAFE_UPDATES = 0;
+SET  @num := 0;
+UPDATE diaconehotencoding SET idDiacritizedCharacter = @num := (@num+1);
+ALTER TABLE diaconehotencoding AUTO_INCREMENT =1;
