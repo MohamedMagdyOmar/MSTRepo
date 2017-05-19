@@ -22,6 +22,7 @@ def declareGlobalVariables():
     global sentenceCount
     sentenceCount = 1
 
+
 def findFiles():
     global listOfFilesPathes
     global listOfDocName
@@ -182,49 +183,50 @@ def encodingDiacritizedCharacter():
                     listOfTargetSequenceEncodedWordsInHexFormat.append(hex(integerSecDiacAfterORing))
 
 
-# def encodingunDiacritizedCharacter():
-#     global listOfUnDiacritizedWord
-#     global listOfInputSequenceEncodedWords
-#     listOfUnDiacritizedWord = []
-#     listOfInputSequenceEncodedWords = []
-#
-#     for word in listOfWords:
-#         if not word in listOfPunctuationBySymbol:
-#
-#             if word.find('.') != -1:
-#                 word = re.sub('[.]', '', word)
-#
-#             word = word.decode('utf-8', 'ignore')
-#             nfkd_form = unicodedata.normalize('NFKD', word)
-#
-#             unDiacritizedWord = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
-#             listOfUnDiacritizedWord.append(unDiacritizedWord)
-#
-#             for c in word:
-#
-#                 if not unicodedata.combining(c):  # letter
-#                     letterFoundFlag = True
-#
-#                     hexAsString = hex(ord(c))[2:].zfill(4)
-#
-#                     binaryAsString = bin(int(hexAsString, 16))[2:].zfill(16)
-#                     integer = int(hexAsString, 16)
-#                     maskedInt = integer & 255
-#                     maskedBinaryAsString = bin(integer & 255)[2:].zfill(16)
-#                     shiftedInt = maskedInt << 4
-#                     shiftedIntInBin = bin(shiftedInt)
-#                     listOfInputSequenceEncodedWords.append(bin(shiftedInt)[2:].zfill(16))
+def encodingunDiacritizedCharacter():
+    global listOfUnDiacritizedWord
+    global listOfInputSequenceEncodedWords
+    listOfUnDiacritizedWord = []
+    listOfInputSequenceEncodedWords = []
 
-# def convertToString():
-#     for item in range(0, len(listOfInputSequenceEncodedWords)):
-#         listOfInputSequenceEncodedWords[item] = str(listOfInputSequenceEncodedWords[item])
+    for word in listOfWords:
+        if not word in listOfPunctuationBySymbol:
+
+            if word.find('.') != -1:
+                word = re.sub('[.]', '', word)
+
+            word = word.decode('utf-8', 'ignore')
+            nfkd_form = unicodedata.normalize('NFKD', word)
+
+            unDiacritizedWord = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
+            listOfUnDiacritizedWord.append(unDiacritizedWord)
+
+            for c in word:
+
+                if not unicodedata.combining(c):  # letter
+                    letterFoundFlag = True
+
+                    hexAsString = hex(ord(c))[2:].zfill(4)
+
+                    binaryAsString = bin(int(hexAsString, 16))[2:].zfill(16)
+                    integer = int(hexAsString, 16)
+                    maskedInt = integer & 255
+                    maskedBinaryAsString = bin(integer & 255)[2:].zfill(16)
+                    shiftedInt = maskedInt << 4
+                    shiftedIntInBin = bin(shiftedInt)
+                    listOfInputSequenceEncodedWords.append(bin(shiftedInt)[2:].zfill(16))
 
 
-# first = ""
-# second = ""
-# third = ""
-# overall = ""
-# spaChar = unicodedata.normalize('NFC', word)
+def convertToString():
+    for item in range(0, len(listOfInputSequenceEncodedWords)):
+        listOfInputSequenceEncodedWords[item] = str(listOfInputSequenceEncodedWords[item])
+
+
+first = ""
+second = ""
+third = ""
+overall = ""
+#  = unicodedata.normalize('NFC', word)
 
 def extractEachCharacterFromWordWithItsDiacritization():
     letterFoundFlag = False
@@ -317,52 +319,52 @@ def pushDataIntoDB():
              unDiacritizedCharacter[x], listOfInputSequenceEncodedWordsInHexFormat[x],
              listOfTargetSequenceEncodedWordsInHexFormat[x]))
 
-    #     if (trainingCounter >= 0 or prevSentenceNumber == listOfDbSentenceNumber[x]) and \
-    #             (isTrainingDataIsFinished is False):
-    #         prevSentenceNumber = listOfDbSentenceNumber[x]
-    #         trainingCounter -= 1
-    #         cur.execute(
-    #             "INSERT INTO ParsedDocument(DocName, UnDiacritizedCharacter,DiacritizedCharacter,LetterType,"
-    #             "SentenceNumber, "
-    #             "Word, "
-    #             "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
-    #             "TargetSequenceEncodedWordsInHexFormat) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-    #             (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'training', listOfDbSentenceNumber[x],
-    #              listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
-    #              listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x]))
-    #     else:
-    #         isTrainingDataIsFinished = True
-    #         if (requiredPercentageForValidation >= 0 or prevSentenceNumber == listOfDbSentenceNumber[x]) and\
-    #                 (isValidationDataIsFinished is False):
-    #             prevSentenceNumber = listOfDbSentenceNumber[x]
-    #             requiredPercentageForValidation -= 1
-    #             cur.execute(
-    #                 "INSERT INTO ParsedDocument(DocName, UnDiacritizedCharacter,DiacritizedCharacter,LetterType,"
-    #                 "SentenceNumber, "
-    #                 "Word, "
-    #                 "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
-    #                 "TargetSequenceEncodedWordsInHexFormat) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-    #                 (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'validation', listOfDbSentenceNumber[x],
-    #                 listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
-    #                 listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x]))
-    #
-    #         else:
-    #             isValidationDataIsFinished = True
-    #             cur.execute(
-    #                 "INSERT INTO ParsedDocument(DocName, UnDiacritizedCharacter,DiacritizedCharacter,LetterType,"
-    #                 "SentenceNumber, "
-    #                 "Word, "
-    #                 "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
-    #                 "TargetSequenceEncodedWordsInHexFormat) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-    #                 (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'testing',
-    #                  listOfDbSentenceNumber[x],
-    #                  listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
-    #                  listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x]))
-    #
-    # for x in range(0, len(listOfWordsInSent)):
-    #     cur.execute(
-    #         "INSERT INTO ListOfWordsAndSentencesInEachDoc(word,SentenceNumber,DocName) VALUES (%s,%s,%s)",
-    #         (listOfWordsInSent[x][0], listOfWordsInSent[x][1], docName))
+        if (trainingCounter >= 0 or prevSentenceNumber == listOfDbSentenceNumber[x]) and \
+                (isTrainingDataIsFinished is False):
+            prevSentenceNumber = listOfDbSentenceNumber[x]
+            trainingCounter -= 1
+            cur.execute(
+                "INSERT INTO ParsedDocument(DocName, UnDiacritizedCharacter,DiacritizedCharacter,LetterType,"
+                "SentenceNumber, "
+                "Word, "
+                "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
+                "TargetSequenceEncodedWordsInHexFormat) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'training', listOfDbSentenceNumber[x],
+                 listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
+                 listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x]))
+        else:
+            isTrainingDataIsFinished = True
+            if (requiredPercentageForValidation >= 0 or prevSentenceNumber == listOfDbSentenceNumber[x]) and\
+                    (isValidationDataIsFinished is False):
+                prevSentenceNumber = listOfDbSentenceNumber[x]
+                requiredPercentageForValidation -= 1
+                cur.execute(
+                    "INSERT INTO ParsedDocument(DocName, UnDiacritizedCharacter,DiacritizedCharacter,LetterType,"
+                    "SentenceNumber, "
+                    "Word, "
+                    "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
+                    "TargetSequenceEncodedWordsInHexFormat) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                    (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'validation', listOfDbSentenceNumber[x],
+                    listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
+                    listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x]))
+
+            else:
+                isValidationDataIsFinished = True
+                cur.execute(
+                    "INSERT INTO ParsedDocument(DocName, UnDiacritizedCharacter,DiacritizedCharacter,LetterType,"
+                    "SentenceNumber, "
+                    "Word, "
+                    "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
+                    "TargetSequenceEncodedWordsInHexFormat) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                    (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'testing',
+                     listOfDbSentenceNumber[x],
+                     listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
+                     listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x]))
+
+    for x in range(0, len(listOfWordsInSent)):
+        cur.execute(
+            "INSERT INTO ListOfWordsAndSentencesInEachDoc(word,SentenceNumber,DocName) VALUES (%s,%s,%s)",
+            (listOfWordsInSent[x][0], listOfWordsInSent[x][1], docName))
 
     db.commit()
     db.close()
