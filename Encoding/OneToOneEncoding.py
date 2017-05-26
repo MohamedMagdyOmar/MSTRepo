@@ -7,6 +7,7 @@ import os
 import datetime
 
 diacritizedCharacter = []
+DiacriticsOnly = []
 unDiacritizedCharacter = []
 listOfDBWords = []
 listOfDbSentenceNumber = []
@@ -236,6 +237,7 @@ def extractEachCharacterFromWordWithItsDiacritization():
     second = ""
     third = ""
     overall = ""
+    diacritics_only_overall = ""
 
     for word in listOfWords:
 
@@ -267,23 +269,38 @@ def extractEachCharacterFromWordWithItsDiacritization():
                     listOfDBWords.append(word)
                     listOfUnDiacritizedWord.append(unDiacritizedWord)
                     unDiacritizedCharacter.append(c)
+                    DiacriticsOnly.append("")
                 elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':
                     second = c
                     prevCharWasDiac = True
                     letterFoundFlag = False
                     overall += c
+                    diacritics_only_overall = c
+
                     comp = unicodedata.normalize('NFC', overall + c)
+                    comp_diacritics_Only = unicodedata.normalize('NFC', diacritics_only_overall)
+
                     diacritizedCharacter.pop()
                     diacritizedCharacter.append(comp)
+
+                    DiacriticsOnly.pop()
+                    DiacriticsOnly.append(comp_diacritics_Only)
+
                 elif prevCharWasDiac and c != u'ٔ' and c != u'ٕ':  # second diacritization
                     third = c
                     letterFoundFlag = False
                     prevCharWasDiac = False
                     overall += c
+                    diacritics_only_overall += c
+
                     comp = unicodedata.normalize('NFC', overall + c)
+                    comp_diacritics_Only = unicodedata.normalize('NFC', diacritics_only_overall)
+
                     diacritizedCharacter.pop()
                     diacritizedCharacter.append(comp)
 
+                    DiacriticsOnly.pop()
+                    DiacriticsOnly.append(comp_diacritics_Only)
                     # for word in listOfUnDiacritizedWord:
                     # for char in word:
                     #  unDiacritizedCharacter.append(char)
@@ -312,12 +329,13 @@ def pushDataIntoDB():
     for x in range(0, len(listOfInputSequenceEncodedWords)):
         cur.execute(
             "INSERT INTO EncodedWords(InputSequenceEncodedWords,TargetSequenceEncodedWords,diacritizedCharacter,"
-            "undiacritizedCharacter,InputSequenceEncodedWordsInHexFormat,TargetSequenceEncodedWordsInHexFormat) "
+            "undiacritizedCharacter,InputSequenceEncodedWordsInHexFormat,TargetSequenceEncodedWordsInHexFormat, "
+            "Diacritics) "
             "VALUES ( "
-            "%s,%s,%s,%s,%s,%s)",
+            "%s,%s,%s,%s,%s,%s,%s)",
             (listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x], diacritizedCharacter[x],
              unDiacritizedCharacter[x], listOfInputSequenceEncodedWordsInHexFormat[x],
-             listOfTargetSequenceEncodedWordsInHexFormat[x]))
+             listOfTargetSequenceEncodedWordsInHexFormat[x], DiacriticsOnly[x]))
 
         if (trainingCounter >= 0 or prevSentenceNumber == listOfDbSentenceNumber[x]) and \
                 (isTrainingDataIsFinished is False):
@@ -328,10 +346,11 @@ def pushDataIntoDB():
                 "SentenceNumber, "
                 "Word, "
                 "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
-                "TargetSequenceEncodedWordsInHexFormat) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                "TargetSequenceEncodedWordsInHexFormat, Diacritics) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                 (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'training', listOfDbSentenceNumber[x],
                  listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
-                 listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x]))
+                 listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x],
+                 DiacriticsOnly[x]))
         else:
             isTrainingDataIsFinished = True
             if (requiredPercentageForValidation >= 0 or prevSentenceNumber == listOfDbSentenceNumber[x]) and\
@@ -343,10 +362,11 @@ def pushDataIntoDB():
                     "SentenceNumber, "
                     "Word, "
                     "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
-                    "TargetSequenceEncodedWordsInHexFormat) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                    "TargetSequenceEncodedWordsInHexFormat, Diacritics) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                     (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'validation', listOfDbSentenceNumber[x],
                     listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
-                    listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x]))
+                    listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x],
+                    DiacriticsOnly[x]))
 
             else:
                 isValidationDataIsFinished = True
@@ -355,11 +375,12 @@ def pushDataIntoDB():
                     "SentenceNumber, "
                     "Word, "
                     "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
-                    "TargetSequenceEncodedWordsInHexFormat) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                    "TargetSequenceEncodedWordsInHexFormat, Diacritics) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                     (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'testing',
                      listOfDbSentenceNumber[x],
                      listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
-                     listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x]))
+                     listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x],
+                     DiacriticsOnly[x]))
 
     for x in range(0, len(listOfWordsInSent)):
         cur.execute(

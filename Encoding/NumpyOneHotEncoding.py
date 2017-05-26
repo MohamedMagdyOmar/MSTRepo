@@ -20,4 +20,10 @@ def encodeMyCharacter(list_of_un_diacritized_character, list_of_diacritized_char
     return one_hot_list__for_un_diacritized_characters,one_hot_list__for_diacritized_characters;
 
 
+def encodeMyCharacter(list_of_characters):
 
+    n__character_classes = len(list_of_characters)
+
+    one_hot_list__of_characters = one_hot_encode(list_of_characters, n__character_classes)
+
+    return one_hot_list__of_characters

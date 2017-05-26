@@ -1,6 +1,7 @@
-select * from parseddocument where   LetterType='training' and SentenceNumber<500;
+select * from parseddocument where   LetterType='training' ;
 select * from parseddocument where   LetterType='validation';
 select * from parseddocument where   LetterType='testing';
+
 SET NAMES 'utf8' COLLATE 'utf8_general_ci';
 ALTER DATABASE mstdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -29,6 +30,10 @@ SET SQL_SAFE_UPDATES = 0;
 delete  from diaconehotencoding;
 SET SQL_SAFE_UPDATES = 0;
 delete  from undiaconehotencoding;
+SET SQL_SAFE_UPDATES = 0;
+delete from alldiacriticsinalldocuments;
+SET SQL_SAFE_UPDATES = 0;
+delete from distinctdiacritics;
 SET SQL_SAFE_UPDATES = 1;
 
 CREATE TABLE new_foo LIKE parseddocument;
@@ -55,6 +60,10 @@ UPDATE undiaconehotencoding SET UnDiacritizedCharacterOneHotEncoding = REPLACE(U
 UPDATE undiaconehotencoding SET UnDiacritizedCharacterOneHotEncoding = REPLACE(UnDiacritizedCharacterOneHotEncoding, '[', '');
 UPDATE undiaconehotencoding SET UnDiacritizedCharacterOneHotEncoding = REPLACE(UnDiacritizedCharacterOneHotEncoding, ']', '');
 
+SET SQL_SAFE_UPDATES = 0;
+UPDATE distinctdiacritics SET encoding = REPLACE(encoding, ' ', '');
+UPDATE distinctdiacritics SET encoding = REPLACE(encoding, '[', '');
+UPDATE distinctdiacritics SET encoding = REPLACE(encoding, ']', '');
 
 -- reset auto increment column
 SET SQL_SAFE_UPDATES = 0;
@@ -64,4 +73,13 @@ ALTER TABLE diaconehotencoding AUTO_INCREMENT =1;
 
 insert into diaconehotencoding (idDiacritizedCharacter, DiacritizedCharacter) values (422, 'عًّّ');
 
-delete from diaconehotencoding where idDiacritizedCharacter = 423
+delete from diaconehotencoding where idDiacritizedCharacter = 423;
+
+select * from alldiacriticsinalldocuments;
+insert into alldiacriticsinalldocuments (Diacritics) values ('عًّ');
+select distinct Diacritics from alldiacriticsinalldocuments;
+UPDATE alldiacriticsinalldocuments SET Diacritics = SUBSTR(Diacritics, 1);
+
+select * from distinctdiacritics
+
+
