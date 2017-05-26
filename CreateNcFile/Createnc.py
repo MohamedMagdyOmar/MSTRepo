@@ -24,9 +24,10 @@ def create_mysql_connection():
 def get_all_letters_of_corresponding_dataset_type(type_of_dataset):
     execute_calculate_total_number_Of_sentences_startTime = datetime.datetime.now()
 
-    listOfSelectedLettersAndSentencesQuery = "select UnDiacritizedCharacter, DiacritizedCharacter, LetterType, " \
+    listOfSelectedLettersAndSentencesQuery = "select UnDiacritizedCharacter, Diacritics, LetterType, " \
                                              "SentenceNumber," \
-                                             " Word, InputSequenceEncodedWords, TargetSequenceEncodedWords " \
+                                             " Word, InputSequenceEncodedWords, TargetSequenceEncodedWords," \
+                                             " DiacritizedCharacter " \
                                              "from ParsedDocument where LetterType=" + "'%s'" % type_of_dataset
 
     cur.execute(listOfSelectedLettersAndSentencesQuery)
@@ -46,7 +47,13 @@ def execute_unchanged_sql_queries():
     global listOfUnDiacritizedCharacter
     listOfUnDiacritizedCharacter = cur.fetchall()
 
-    listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding "
+    # commented because this is old way for diacritization
+    # listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding "
+    # cur.execute(listOfDiacritizedCharacterQuery)
+    # global listOfDiacritizedCharacter
+    # listOfDiacritizedCharacter = cur.fetchall()
+
+    listOfDiacritizedCharacterQuery = "select * from distinctdiacritics "
     cur.execute(listOfDiacritizedCharacterQuery)
     global listOfDiacritizedCharacter
     listOfDiacritizedCharacter = cur.fetchall()
@@ -59,14 +66,13 @@ def create_netcdf_label():
     execute_create_netcdf_label_start_time = datetime.datetime.now()
     # extract one hot encoding column
     labels = [col[0] for col in listOfDiacritizedCharacter]
-    v = listOfDiacritizedCharacter[421][1]
+
     # convert unicode to string
     labels = [str(x) for x in labels]
 
     # convert array of string to array of char to be compatible with NETCDF
     # you will find strange values, but do not worry, it will exported correctly
     labels = netcdf_helpers.stringtochar(np.array(labels))
-    label_list_after_removing_spaces_and_dots = []
 
     global purified_labels
     purified_labels = []
@@ -188,10 +194,8 @@ def create_seq_tags():
 
 
 def create_netcdf_file(dataset_type):
-    global punchNumber
-    punchNumber += 1
-    print "punch Number: ", punchNumber
-    outputFilename = dataset_type + "NCFile_" + str(punchNumber) + ".nc"
+
+    outputFilename = dataset_type + "NCFile" + ".nc"
 
     # create a new .nc file
     dataset = netcdf_helpers.Dataset(outputFilename, 'w', format='NETCDF4')
@@ -244,7 +248,6 @@ def try_using_query(letter):
 
 if __name__ == "__main__":
     availableDataSetTypes = ['testing']
-    patchSize = 500
     columnNumberOf_SentenceNumber = 3
 
     create_mysql_connection()
