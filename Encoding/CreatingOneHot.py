@@ -17,8 +17,11 @@ cur = db.cursor()
 sqlQuery = "select distinct InputSequenceEncodedWords,TargetSequenceEncodedWords,diacritizedCharacter," \
            "undiacritizedCharacter " \
            "from EncodedWords order by undiacritizedCharacter asc"
-
 cur.execute(sqlQuery)
+
+secondSQLQuery = "select distinct Diacritics from alldiacriticsinalldocuments"
+cur.execute(secondSQLQuery)
+
 
 rowsOfEncodedWordsInDB = cur.fetchall()
 rowsOfEncodedWordsInDB = np.array(rowsOfEncodedWordsInDB)
