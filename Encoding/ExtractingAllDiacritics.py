@@ -72,13 +72,14 @@ def extract_diacritization_symbols():
 
                 if not unicodedata.combining(c):
                     letterFoundFlag = True
-
+                    DiacriticsOnly.append("")
                 elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':
                     prevCharWasDiac = True
                     letterFoundFlag = False
                     overall = c
                     comp = unicodedata.normalize('NFC', overall)
 
+                    DiacriticsOnly.pop()
                     DiacriticsOnly.append(comp)
                 elif prevCharWasDiac and c != u'ٔ' and c != u'ٕ':  # second diacritization
 
