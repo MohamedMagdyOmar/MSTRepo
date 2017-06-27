@@ -32,7 +32,10 @@ row_of_errors_excel_file = 0
 
 workbook = xlsxwriter.Workbook(diacritization_error_excel_file_path)
 worksheet = workbook.add_worksheet()
-
+worksheet.write(0, 0, 'Expected')
+worksheet.write(0, 1, 'Actual')
+worksheet.write(0, 2, 'Error Location')
+workbook.close()
 
 def connect_to_db():
     db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
@@ -199,6 +202,7 @@ def get_diacritization_error():
     all_sentence = ''
     for each_word in current_sentence:
         all_sentence += each_word[0] + ' '
+
     worksheet.write(row_of_errors_excel_file, column, all_sentence)
 
     row_of_errors_excel_file += 1
