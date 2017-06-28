@@ -217,14 +217,86 @@ def get_type_of_locations_of_fatha_correction():
 
 
 def correct_fatha_errors():
-    x = 1
+    letterFoundFlag = False
+    prevCharWasDiac = False
+    overall = ""
+    comp = ''
     global list_of_location_types
-
     for each_location, each_object in zip(locations_of_fatha_correction_letters, list_of_location_types):
-        x = list_of_location_types[0]
-        y = getattr(x, 'location')
 
-        z = 1
+        if getattr(each_object, 'location') != 'first' and getattr(each_object, 'letter') == u'ا':
+            nfkd_form = unicodedata.normalize('NFKD', (list_of_actual_letters[each_location - 1])[0])
+            for c in nfkd_form:
+                if not unicodedata.combining(c):
+                    overall = c
+                    letterFoundFlag = True
+                elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':
+                    prevCharWasDiac = True
+                    letterFoundFlag = False
+                    if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
+                        c = u'َ'
+                    overall += c
+                    comp = unicodedata.normalize('NFC', overall)
+                elif prevCharWasDiac and c != u'ٔ' and c != u'ٕ':  # second diacritization
+
+                    if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
+                        c = u'َ'
+                    letterFoundFlag = False
+                    prevCharWasDiac = False
+                    overall += c
+                    comp = unicodedata.normalize('NFC', overall)
+
+
+            x = 1
+        elif getattr(each_object, 'location') == 'last' and getattr(each_object, 'letter') == u'ة':
+            nfkd_form = unicodedata.normalize('NFKD', (list_of_actual_letters[each_location - 1])[0])
+            for c in nfkd_form:
+                if not unicodedata.combining(c):
+                    overall = c
+                    letterFoundFlag = True
+                elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':
+                    prevCharWasDiac = True
+                    letterFoundFlag = False
+                    if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
+                        c = u'َ'
+                    overall += c
+                    comp = unicodedata.normalize('NFC', overall + c)
+                elif prevCharWasDiac and c != u'ٔ' and c != u'ٕ':  # second diacritization
+
+                    if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
+                        c = u'َ'
+                    letterFoundFlag = False
+                    prevCharWasDiac = False
+                    overall += c
+                    comp = unicodedata.normalize('NFC', overall + c)
+        elif getattr(each_object, 'location') == 'last' and getattr(each_object, 'letter') == u'ى':
+            nfkd_form = unicodedata.normalize('NFKD', (list_of_actual_letters[each_location - 1])[0])
+            for c in nfkd_form:
+                if not unicodedata.combining(c):
+                    overall = c
+                    letterFoundFlag = True
+                elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':
+                    prevCharWasDiac = True
+                    letterFoundFlag = False
+                    if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
+                        c = u'َ'
+                    overall += c
+                    comp = unicodedata.normalize('NFC', overall + c)
+                elif prevCharWasDiac and c != u'ٔ' and c != u'ٕ':  # second diacritization
+
+                    if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
+                        c = u'َ'
+                    letterFoundFlag = False
+                    prevCharWasDiac = False
+                    overall += c
+                    comp = unicodedata.normalize('NFC', overall + c)
+
+        global list_of_actual_letters
+        list_of_actual_letters = [list(elem) for elem in list_of_actual_letters]
+
+        (list_of_actual_letters[each_location - 1])[0] = comp
+        list_of_actual_letters = [tuple(elem) for elem in list_of_actual_letters]
+        list_of_actual_letters = tuple(list_of_actual_letters)
 
 
 def get_diacritization_error():
