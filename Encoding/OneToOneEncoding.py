@@ -5,7 +5,7 @@ import MySQLdb
 import math
 import os
 import datetime
-
+# 1
 diacritizedCharacter = []
 DiacriticsOnly = []
 unDiacritizedCharacter = []
@@ -277,7 +277,7 @@ def extractEachCharacterFromWordWithItsDiacritization():
                     overall += c
                     diacritics_only_overall = c
 
-                    comp = unicodedata.normalize('NFC', overall + c)
+                    comp = unicodedata.normalize('NFC', overall)
                     comp_diacritics_Only = unicodedata.normalize('NFC', diacritics_only_overall)
 
                     diacritizedCharacter.pop()
@@ -293,7 +293,7 @@ def extractEachCharacterFromWordWithItsDiacritization():
                     overall += c
                     diacritics_only_overall += c
 
-                    comp = unicodedata.normalize('NFC', overall + c)
+                    comp = unicodedata.normalize('NFC', overall)
                     comp_diacritics_Only = unicodedata.normalize('NFC', diacritics_only_overall)
 
                     diacritizedCharacter.pop()

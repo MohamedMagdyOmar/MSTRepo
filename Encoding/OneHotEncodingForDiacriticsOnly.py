@@ -4,6 +4,8 @@ import MySQLdb
 import NumpyOneHotEncoding as encoding
 import numpy as np
 
+# 5
+
 db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
                      user="root",  # your username
                      passwd="Islammega88",  # your password

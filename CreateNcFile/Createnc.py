@@ -209,7 +209,7 @@ def create_netcdf_file(dataset_type):
 
 
     #  added due to error in running library
-    dataset.createDimension('maxSeqTagLength', 1)
+    dataset.createDimension('maxSeqTagLength', 10)
 
     # create the variables
     netCDFLabels = dataset.createVariable('labels', 'S1', ('numLabels', 'maxLabelLength'))

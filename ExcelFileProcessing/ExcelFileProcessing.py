@@ -230,14 +230,14 @@ def correct_fatha_errors():
                 if not unicodedata.combining(c):
                     overall = c
                     letterFoundFlag = True
-                elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':
+                elif (letterFoundFlag and c != u'ٔ' and c != u'ٕ') and (len(nfkd_form) > 1):
                     prevCharWasDiac = True
                     letterFoundFlag = False
                     if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
                         c = u'َ'
                     overall += c
                     comp = unicodedata.normalize('NFC', overall)
-                elif prevCharWasDiac and c != u'ٔ' and c != u'ٕ':  # second diacritization
+                elif (prevCharWasDiac and c != u'ٔ' and c != u'ٕ') and (len(nfkd_form) > 2):  # second diacritization
 
                     if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
                         c = u'َ'
@@ -254,14 +254,14 @@ def correct_fatha_errors():
                 if not unicodedata.combining(c):
                     overall = c
                     letterFoundFlag = True
-                elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':
+                elif (letterFoundFlag and c != u'ٔ' and c != u'ٕ') and (len(nfkd_form) > 1):
                     prevCharWasDiac = True
                     letterFoundFlag = False
                     if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
                         c = u'َ'
                     overall += c
                     comp = unicodedata.normalize('NFC', overall + c)
-                elif prevCharWasDiac and c != u'ٔ' and c != u'ٕ':  # second diacritization
+                elif (prevCharWasDiac and c != u'ٔ' and c != u'ٕ') and (len(nfkd_form) > 2):
 
                     if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
                         c = u'َ'
@@ -275,14 +275,14 @@ def correct_fatha_errors():
                 if not unicodedata.combining(c):
                     overall = c
                     letterFoundFlag = True
-                elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':
+                elif (letterFoundFlag and c != u'ٔ' and c != u'ٕ') and (len(nfkd_form) > 1):
                     prevCharWasDiac = True
                     letterFoundFlag = False
                     if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
                         c = u'َ'
                     overall += c
                     comp = unicodedata.normalize('NFC', overall + c)
-                elif prevCharWasDiac and c != u'ٔ' and c != u'ٕ':  # second diacritization
+                elif (prevCharWasDiac and c != u'ٔ' and c != u'ٕ') and (len(nfkd_form) > 2):
 
                     if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
                         c = u'َ'
