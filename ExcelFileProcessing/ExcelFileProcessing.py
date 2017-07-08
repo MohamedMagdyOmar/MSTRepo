@@ -6,8 +6,20 @@ import MySQLdb
 import MySQLdb.cursors
 import os
 import glob
+import unicodedata
 from xlrd import open_workbook
 from xlutils.copy import copy
+
+
+class fatha_correction_class():
+    def __init__(self, location, position, letter):
+        self.location = location
+        self.position = position
+        self.letter = letter
+
+    location = ""
+    position = 0
+    letter = ""
 
 rnn_output_for_one_seq = []
 neurons_locations_with_highest_output_for_a_seq = []
@@ -19,6 +31,9 @@ list_of_actual_letters_errors = []
 list_of_expected_letters_errors = []
 current_sentence = []
 
+letters_of_fatha_correction = [u'ة', u'ا', u'ى']
+locations_of_fatha_correction_letters = []
+list_of_location_types = []
 total_error = 0
 sentence_number = 0
 
@@ -36,6 +51,7 @@ worksheet.write(0, 0, 'Expected')
 worksheet.write(0, 1, 'Actual')
 worksheet.write(0, 2, 'Error Location')
 workbook.close()
+
 
 def connect_to_db():
     db = MySQLdb.connect(host="127.0.0.1",  # your host, usually localhost
@@ -153,6 +169,136 @@ def write_data_into_excel_file(path_of_file):
     workbook.close()
 
 
+def fatha_correction():
+    get_locations_of_letters_of_fatha_correction()
+    get_type_of_locations_of_fatha_correction()
+    correct_fatha_errors()
+
+    x = 1
+
+
+def get_locations_of_letters_of_fatha_correction():
+    global locations_of_fatha_correction_letters
+    locations_of_fatha_correction_letters = []
+
+    counter = -1
+    for each_letter in list_of_actual_letters:
+        counter += 1
+        if any(each_letter[0] in s for s in letters_of_fatha_correction):
+            locations_of_fatha_correction_letters.append(counter)
+
+
+def get_type_of_locations_of_fatha_correction():
+    global list_of_location_types
+    list_of_location_types = []
+
+    for each_word in current_sentence:
+        number_of_letters = 0
+        nfkd_form = unicodedata.normalize('NFKD', each_word[0])
+
+        unDiacritizedWord = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
+        for each_letter in unDiacritizedWord:
+            number_of_letters += 1
+
+        location_counter = 0
+        for each_letter in unDiacritizedWord:
+            location_counter += 1
+            if any(each_letter in s for s in letters_of_fatha_correction):
+                if location_counter > 1:
+                    fatha = fatha_correction_class('', 0, '')
+                    fatha.letter = each_letter
+                    if location_counter == number_of_letters:
+                        fatha.location = 'last'
+                    else:
+                        fatha.location = 'middle'
+
+                    list_of_location_types.append(fatha)
+        x = 1
+
+
+def correct_fatha_errors():
+    letterFoundFlag = False
+    prevCharWasDiac = False
+    overall = ""
+    comp = ''
+    global list_of_location_types
+    for each_location, each_object in zip(locations_of_fatha_correction_letters, list_of_location_types):
+
+        if getattr(each_object, 'location') != 'first' and getattr(each_object, 'letter') == u'ا':
+            nfkd_form = unicodedata.normalize('NFKD', (list_of_actual_letters[each_location - 1])[0])
+            for c in nfkd_form:
+                if not unicodedata.combining(c):
+                    overall = c
+                    letterFoundFlag = True
+                elif (letterFoundFlag and c != u'ٔ' and c != u'ٕ') and (len(nfkd_form) > 1):
+                    prevCharWasDiac = True
+                    letterFoundFlag = False
+                    if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
+                        c = u'َ'
+                    overall += c
+                    comp = unicodedata.normalize('NFC', overall)
+                elif (prevCharWasDiac and c != u'ٔ' and c != u'ٕ') and (len(nfkd_form) > 2):  # second diacritization
+
+                    if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
+                        c = u'َ'
+                    letterFoundFlag = False
+                    prevCharWasDiac = False
+                    overall += c
+                    comp = unicodedata.normalize('NFC', overall)
+
+
+            x = 1
+        elif getattr(each_object, 'location') == 'last' and getattr(each_object, 'letter') == u'ة':
+            nfkd_form = unicodedata.normalize('NFKD', (list_of_actual_letters[each_location - 1])[0])
+            for c in nfkd_form:
+                if not unicodedata.combining(c):
+                    overall = c
+                    letterFoundFlag = True
+                elif (letterFoundFlag and c != u'ٔ' and c != u'ٕ') and (len(nfkd_form) > 1):
+                    prevCharWasDiac = True
+                    letterFoundFlag = False
+                    if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
+                        c = u'َ'
+                    overall += c
+                    comp = unicodedata.normalize('NFC', overall + c)
+                elif (prevCharWasDiac and c != u'ٔ' and c != u'ٕ') and (len(nfkd_form) > 2):
+
+                    if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
+                        c = u'َ'
+                    letterFoundFlag = False
+                    prevCharWasDiac = False
+                    overall += c
+                    comp = unicodedata.normalize('NFC', overall + c)
+        elif getattr(each_object, 'location') == 'last' and getattr(each_object, 'letter') == u'ى':
+            nfkd_form = unicodedata.normalize('NFKD', (list_of_actual_letters[each_location - 1])[0])
+            for c in nfkd_form:
+                if not unicodedata.combining(c):
+                    overall = c
+                    letterFoundFlag = True
+                elif (letterFoundFlag and c != u'ٔ' and c != u'ٕ') and (len(nfkd_form) > 1):
+                    prevCharWasDiac = True
+                    letterFoundFlag = False
+                    if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
+                        c = u'َ'
+                    overall += c
+                    comp = unicodedata.normalize('NFC', overall + c)
+                elif (prevCharWasDiac and c != u'ٔ' and c != u'ٕ') and (len(nfkd_form) > 2):
+
+                    if c == u'ٌ' or c == u'ْ' or c == u'ُ' or c == u'ِ' or c == u'ٍ':
+                        c = u'َ'
+                    letterFoundFlag = False
+                    prevCharWasDiac = False
+                    overall += c
+                    comp = unicodedata.normalize('NFC', overall + c)
+
+        global list_of_actual_letters
+        list_of_actual_letters = [list(elem) for elem in list_of_actual_letters]
+
+        (list_of_actual_letters[each_location - 1])[0] = comp
+        list_of_actual_letters = [tuple(elem) for elem in list_of_actual_letters]
+        list_of_actual_letters = tuple(list_of_actual_letters)
+
+
 def get_diacritization_error():
     global list_of_actual_letters_errors
     global list_of_expected_letters_errors
@@ -229,6 +375,8 @@ if __name__ == "__main__":
         get_all_letters_from_db()
         get_actual_letters()
         get_expected_letters()
+        fatha_correction()
         # write_data_into_excel_file('D:\CurrenntRepo\CurrenntVS\CURRENNT\ArabicDiacritizationExample\Book1.xlsx')
         get_diacritization_error()
         sentence_number += 1
+

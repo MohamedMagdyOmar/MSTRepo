@@ -49,16 +49,16 @@ def execute_unchanged_sql_queries():
     listOfUnDiacritizedCharacter = cur.fetchall()
 
     # commented because this is old way for diacritization
-    listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding "
-    cur.execute(listOfDiacritizedCharacterQuery)
-    global listOfDiacritizedCharacter
-    listOfDiacritizedCharacter = cur.fetchall()
-
-    # commented because this is new way for diacritization
-    #listOfDiacritizedCharacterQuery = "select * from distinctdiacritics "
+    #listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding "
     #cur.execute(listOfDiacritizedCharacterQuery)
     #global listOfDiacritizedCharacter
     #listOfDiacritizedCharacter = cur.fetchall()
+
+    # commented because this is new way for diacritization
+    listOfDiacritizedCharacterQuery = "select * from distinctdiacritics "
+    cur.execute(listOfDiacritizedCharacterQuery)
+    global listOfDiacritizedCharacter
+    listOfDiacritizedCharacter = cur.fetchall()
 
     executeChangedSQLQueriesEndTime = datetime.datetime.now()
     print "executeChangedSQLQueries takes : ", executeChangedSQLQueriesEndTime - executeChangedSQLQueriesStartTime
@@ -155,13 +155,10 @@ def create_netcdf_target_classes():
     targetClass = []
     beforeWhileLoop = datetime.datetime.now()
     for eachItem in range(0, len(selected_letters_in_this_loop)):
-        yourLabel = selected_letters_in_this_loop[eachItem][7]
+        yourLabel = selected_letters_in_this_loop[eachItem][1]
         OneHotTargetClassNotFound = True
 
         while OneHotTargetClassNotFound:
-            if(searchCounter==421) :
-                x = 1
-
             if listOfDiacritizedCharacter[searchCounter][1] == yourLabel:
                 OneHotTargetClassNotFound = False
                 targetClass.append(listOfDiacritizedCharacter[searchCounter][0])
@@ -270,7 +267,7 @@ def try_using_query(letter):
 
 
 if __name__ == "__main__":
-    availableDataSetTypes = ['testing']
+    availableDataSetTypes = ['validation']
     columnNumberOf_SentenceNumber = 3
 
     create_mysql_connection()

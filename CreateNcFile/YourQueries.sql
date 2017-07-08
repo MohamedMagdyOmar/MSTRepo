@@ -1,6 +1,8 @@
+select  SentenceNumber from parseddocument where LetterType='testing' limit 1;
+
 select * from parseddocument where   LetterType='training' ;
 select * from parseddocument where   LetterType='validation';
-select * from parseddocument where   LetterType='testing';
+select * from parseddocument where   LetterType='testing' and SentenceNumber = 4592 ;
 
 SET NAMES 'utf8' COLLATE 'utf8_general_ci';
 ALTER DATABASE mstdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -68,18 +70,23 @@ UPDATE distinctdiacritics SET encoding = REPLACE(encoding, ']', '');
 -- reset auto increment column
 SET SQL_SAFE_UPDATES = 0;
 SET  @num := 0;
-UPDATE diaconehotencoding SET idDiacritizedCharacter = @num := (@num+1);
-ALTER TABLE diaconehotencoding AUTO_INCREMENT =1;
+UPDATE undiaconehotencoding SET idUnDiacritizedCharacter = @num := (@num+1);
+ALTER TABLE undiaconehotencoding AUTO_INCREMENT =1;
 
-insert into diaconehotencoding (idDiacritizedCharacter, DiacritizedCharacter) values (422, 'عًّّ');
+insert into diaconehotencoding (idDiacritizedCharacter, DiacritizedCharacter) values (422, 'عًّ');
 
-delete from diaconehotencoding where idDiacritizedCharacter = 423;
+delete from diaconehotencoding where idDiacritizedCharacter = 422;
 
 select * from alldiacriticsinalldocuments;
 insert into alldiacriticsinalldocuments (Diacritics) values ('عًّ');
 select distinct Diacritics from alldiacriticsinalldocuments;
 UPDATE alldiacriticsinalldocuments SET Diacritics = SUBSTR(Diacritics, 1);
 
-select * from distinctdiacritics
+select * from distinctdiacritics;
 
+SET SQL_SAFE_UPDATES = 0;
+delete from parseddocument where DocName = 'Ala7adWeAlmathany';
+-- delete from ListOfWordsAndSentencesInEachDoc where DocName = 'Ala7adWeAlmathany';
+delete from EncodedWords where docName = 'Ala7adWeAlmathany';
 
+select * from diaconehotencoding where DiacritizedCharacter='عًّ'

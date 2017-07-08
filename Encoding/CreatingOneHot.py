@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+# 2
+
 import MySQLdb
 import NumpyOneHotEncoding as encoding
 import numpy as np
@@ -19,8 +21,8 @@ sqlQuery = "select distinct InputSequenceEncodedWords,TargetSequenceEncodedWords
            "from EncodedWords order by undiacritizedCharacter asc"
 cur.execute(sqlQuery)
 
-secondSQLQuery = "select distinct Diacritics from alldiacriticsinalldocuments"
-cur.execute(secondSQLQuery)
+# secondSQLQuery = "select distinct Diacritics from alldiacriticsinalldocuments"
+# cur.execute(secondSQLQuery)
 
 
 rowsOfEncodedWordsInDB = cur.fetchall()
@@ -41,7 +43,7 @@ for x in range(0, len(listOfDiacritizedCharacter)):
     listOfDiacritizedCharacter[x] = (listOfDiacritizedCharacter[x]).encode('utf-8')
 
 one_hot_list__for_un_diacritized_characters, one_hot_list__for_diacritized_characters = \
-    encoding.encodeMyCharacter(listOfUniqueUnDiacritizedCharacter, listOfDiacritizedCharacter)
+    encoding.encodeMyCharacterWith2Parameters(listOfUniqueUnDiacritizedCharacter, listOfDiacritizedCharacter)
 
 UnDiacritizedOneHotInNDimArrayForm = np.array(one_hot_list__for_un_diacritized_characters)
 UnDiacritizedOneHotInNDimArrayForm = UnDiacritizedOneHotInNDimArrayForm.astype(np.int8)
