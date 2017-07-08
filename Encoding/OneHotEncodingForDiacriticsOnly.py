@@ -27,7 +27,7 @@ for x in range(0, len(rowsOfDiacriticsInDB)):
     rowsOfDiacriticsInDB[x] = (rowsOfDiacriticsInDB[x][0]).encode('utf-8')
 
 rowsOfDiacriticsInDB = np.array(rowsOfDiacriticsInDB)
-one_hot_list_for_diacritized = encoding.encodeMyCharacter(rowsOfDiacriticsInDB)
+one_hot_list_for_diacritized = encoding.encodeMyCharacterWith1Parameter(rowsOfDiacriticsInDB)
 
 DiacritizedOneHotInNDimArrayForm = np.array(one_hot_list_for_diacritized)
 DiacritizedOneHotInNDimArrayForm = DiacritizedOneHotInNDimArrayForm.astype(np.int8)

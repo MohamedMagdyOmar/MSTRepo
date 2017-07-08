@@ -6,6 +6,7 @@ import datetime
 
 global punchNumber
 punchNumber = 0
+max_seq_tag_length = 10
 
 
 def create_mysql_connection():
@@ -48,15 +49,16 @@ def execute_unchanged_sql_queries():
     listOfUnDiacritizedCharacter = cur.fetchall()
 
     # commented because this is old way for diacritization
-    # listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding "
-    # cur.execute(listOfDiacritizedCharacterQuery)
-    # global listOfDiacritizedCharacter
-    # listOfDiacritizedCharacter = cur.fetchall()
-
-    listOfDiacritizedCharacterQuery = "select * from distinctdiacritics "
+    listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding "
     cur.execute(listOfDiacritizedCharacterQuery)
     global listOfDiacritizedCharacter
     listOfDiacritizedCharacter = cur.fetchall()
+
+    # commented because this is new way for diacritization
+    #listOfDiacritizedCharacterQuery = "select * from distinctdiacritics "
+    #cur.execute(listOfDiacritizedCharacterQuery)
+    #global listOfDiacritizedCharacter
+    #listOfDiacritizedCharacter = cur.fetchall()
 
     executeChangedSQLQueriesEndTime = datetime.datetime.now()
     print "executeChangedSQLQueries takes : ", executeChangedSQLQueriesEndTime - executeChangedSQLQueriesStartTime
@@ -153,10 +155,13 @@ def create_netcdf_target_classes():
     targetClass = []
     beforeWhileLoop = datetime.datetime.now()
     for eachItem in range(0, len(selected_letters_in_this_loop)):
-        yourLabel = selected_letters_in_this_loop[eachItem][1]
+        yourLabel = selected_letters_in_this_loop[eachItem][7]
         OneHotTargetClassNotFound = True
 
         while OneHotTargetClassNotFound:
+            if(searchCounter==421) :
+                x = 1
+
             if listOfDiacritizedCharacter[searchCounter][1] == yourLabel:
                 OneHotTargetClassNotFound = False
                 targetClass.append(listOfDiacritizedCharacter[searchCounter][0])
@@ -179,16 +184,34 @@ def create_netcdf_target_classes():
 def create_seq_tags():
     execute_create_seq_tag_start_time = datetime.datetime.now()
     global seq_tag_sentences
+    global max_seq_tag_length
+    final = []
+    final2 = []
     seq_tag_sentences = []
     counter = 1
     for eachItem in range(0, len(seq_lengths)):
         sentenceNumber = counter
-
-        seq_tag_sentences.append(str(sentenceNumber))
+        final = [int(i) for i in str(sentenceNumber)]
+        number_of_zeros = max_seq_tag_length - len((final))
+        sentenceNumber = str(sentenceNumber)
+        for x in range (0, number_of_zeros):
+            sentenceNumber = '0' + ',' + sentenceNumber
+            final2.append(str(0))
+        for x in range(0, len(final)):
+            final2.append(str(final[x]))
+        seq_tag_sentences.append((final2))
+        final2 = []
         counter += 1
 
     seq_tag_sentences = (np.array(seq_tag_sentences))
+   # for x in range (0, len(seq_tag_sentences)):
+   #     final.append(seq_tag_sentences[x].split(','))
 
+    #seq_tag_sentences = (np.array(final))
+    #a = seq_tag_sentences[0].split(',')
+    #v = np.fromstring(seq_tag_sentences, sep=',').reshape(-1, 10)
+    #y = seq_tag_sentences[0]
+    #x = np.reshape(seq_tag_sentences[0],(-1,2))
     execute_create_seq_tag_end_time = datetime.datetime.now()
     print "createSeqTags takes : ", execute_create_seq_tag_end_time - execute_create_seq_tag_start_time
 

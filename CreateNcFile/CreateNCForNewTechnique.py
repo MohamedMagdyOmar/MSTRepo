@@ -49,16 +49,16 @@ def execute_unchanged_sql_queries():
     listOfUnDiacritizedCharacter = cur.fetchall()
 
     # commented because this is old way for diacritization
-    listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding "
-    cur.execute(listOfDiacritizedCharacterQuery)
-    global listOfDiacritizedCharacter
-    listOfDiacritizedCharacter = cur.fetchall()
-
-    # commented because this is new way for diacritization
-    #listOfDiacritizedCharacterQuery = "select * from distinctdiacritics "
+    #listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding "
     #cur.execute(listOfDiacritizedCharacterQuery)
     #global listOfDiacritizedCharacter
     #listOfDiacritizedCharacter = cur.fetchall()
+
+    # commented because this is new way for diacritization
+    listOfDiacritizedCharacterQuery = "select * from distinctdiacritics "
+    cur.execute(listOfDiacritizedCharacterQuery)
+    global listOfDiacritizedCharacter
+    listOfDiacritizedCharacter = cur.fetchall()
 
     executeChangedSQLQueriesEndTime = datetime.datetime.now()
     print "executeChangedSQLQueries takes : ", executeChangedSQLQueriesEndTime - executeChangedSQLQueriesStartTime
