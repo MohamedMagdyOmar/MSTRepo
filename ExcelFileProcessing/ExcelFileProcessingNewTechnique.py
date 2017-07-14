@@ -111,7 +111,7 @@ def get_neurons_numbers_with_highest_output_value():
 
 
 def get_all_letters_from_db():
-    list_of_all_diacritized_letters_query = "select DiacritizedCharacter from diaconehotencoding"
+    list_of_all_diacritized_letters_query = "select diacritics from distinctdiacritics"
 
     cur.execute(list_of_all_diacritized_letters_query)
 
@@ -130,7 +130,7 @@ def get_actual_letters():
 
 def get_expected_letters():
     global sentence_number
-    list_of_expected_diacritized_letters_query = "select DiacritizedCharacter from parseddocument where " \
+    list_of_expected_diacritized_letters_query = "select Diacritics from parseddocument where " \
                                                  "LetterType='testing' and SentenceNumber = " + str(sentence_number)
 
     cur.execute(list_of_expected_diacritized_letters_query)
