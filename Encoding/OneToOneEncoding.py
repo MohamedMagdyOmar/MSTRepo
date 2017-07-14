@@ -12,7 +12,7 @@ unDiacritizedCharacter = []
 listOfDBWords = []
 listOfDbSentenceNumber = []
 listOfPunctuationBySymbol = [u' .', u'.', u' :', u'«', u'»', u'،', u'؛', u'؟', u'.(', u').', u':(', u'):', u'» .', u'».']
-
+final_ListOfUndiacritized_Word = []
 listOfArabicDiacriticsUnicode = [["064b", "064c", "064d", "064e", "064f", "0650", "0651", "0652"],
                                  [1, 2, 3, 4, 5, 6, 8, 7]]
 
@@ -267,6 +267,7 @@ def extractEachCharacterFromWordWithItsDiacritization():
                     listOfDbSentenceNumber.append(sentenceNumber)
 
                     listOfDBWords.append(word)
+                    final_ListOfUndiacritized_Word.append(unDiacritizedWord)
                     listOfUnDiacritizedWord.append(unDiacritizedWord)
                     unDiacritizedCharacter.append(c)
                     DiacriticsOnly.append("")
@@ -346,11 +347,12 @@ def pushDataIntoDB():
                 "SentenceNumber, "
                 "Word, "
                 "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
-                "TargetSequenceEncodedWordsInHexFormat, Diacritics) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                "TargetSequenceEncodedWordsInHexFormat, Diacritics, UnDiacritizedWord) VALUES (%s,%s,%s,%s,%s,%s,%s,"
+                "%s,%s,%s,%s,%s)",
                 (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'training', listOfDbSentenceNumber[x],
                  listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
                  listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x],
-                 DiacriticsOnly[x]))
+                 DiacriticsOnly[x], final_ListOfUndiacritized_Word[x]))
         else:
             isTrainingDataIsFinished = True
             if (requiredPercentageForValidation >= 0 or prevSentenceNumber == listOfDbSentenceNumber[x]) and\
@@ -362,11 +364,11 @@ def pushDataIntoDB():
                     "SentenceNumber, "
                     "Word, "
                     "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
-                    "TargetSequenceEncodedWordsInHexFormat, Diacritics) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                    "TargetSequenceEncodedWordsInHexFormat, Diacritics, UnDiacritizedWord) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                     (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'validation', listOfDbSentenceNumber[x],
                     listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
                     listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x],
-                    DiacriticsOnly[x]))
+                    DiacriticsOnly[x], final_ListOfUndiacritized_Word[x]))
 
             else:
                 isValidationDataIsFinished = True
@@ -375,12 +377,12 @@ def pushDataIntoDB():
                     "SentenceNumber, "
                     "Word, "
                     "InputSequenceEncodedWords,TargetSequenceEncodedWords, InputSequenceEncodedWordsInHexFormat,"
-                    "TargetSequenceEncodedWordsInHexFormat, Diacritics) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                    "TargetSequenceEncodedWordsInHexFormat, Diacritics, UnDiacritizedWord) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                     (docName, unDiacritizedCharacter[x], diacritizedCharacter[x], 'testing',
                      listOfDbSentenceNumber[x],
                      listOfDBWords[x], listOfInputSequenceEncodedWords[x], listOfTargetSequenceEncodedWords[x],
                      listOfInputSequenceEncodedWordsInHexFormat[x], listOfTargetSequenceEncodedWordsInHexFormat[x],
-                     DiacriticsOnly[x]))
+                     DiacriticsOnly[x], final_ListOfUndiacritized_Word[x]))
 
     for x in range(0, len(listOfWordsInSent)):
         cur.execute(
