@@ -362,9 +362,13 @@ def get_undiacritized_version(list_of_words):
 
 def get_corresponding_diacritized_versions(word):
     connect_to_db()
-    selected_sentence_query = "select * from dictionary where UnDiacritizedWord = " + word
+    y = []
+    #word = word.encode('utf-8', 'ignore')
+    #selected_sentence_query = "select * from dictionary where UnDiacritizedWord =" + "'%s'" % word
+    selected_sentence_query = "select * from dictionary"
     cur.execute(selected_sentence_query)
-
+    x = cur.fetchall()
+    y = ([t for t in x if t[2].startswith(word)])
     return cur.fetchall()
 
 

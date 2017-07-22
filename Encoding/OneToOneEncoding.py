@@ -254,6 +254,7 @@ def extractEachCharacterFromWordWithItsDiacritization():
 
             sentenceNumber = listOfWordsInSent[loopCount][1]
             loopCount += 1
+            #word = u'آبَاءِ'
             spaChar = unicodedata.normalize('NFC', word)
             for c in spaChar:
 
@@ -267,10 +268,13 @@ def extractEachCharacterFromWordWithItsDiacritization():
                     listOfDbSentenceNumber.append(sentenceNumber)
 
                     listOfDBWords.append(word)
-                    final_ListOfUndiacritized_Word.append(unDiacritizedWord)
+
                     listOfUnDiacritizedWord.append(unDiacritizedWord)
                     unDiacritizedCharacter.append(c)
                     DiacriticsOnly.append("")
+                    unDiacritizedWord = u"".join([c for c in nfkd_form if not unicodedata.combining(c) or c == u'ٔ' or c == u'ٕ'])
+                    final_ListOfUndiacritized_Word.append(unDiacritizedWord)
+
                 elif letterFoundFlag and c != u'ٔ' and c != u'ٕ':
                     second = c
                     prevCharWasDiac = True
@@ -286,7 +290,6 @@ def extractEachCharacterFromWordWithItsDiacritization():
 
                     DiacriticsOnly.pop()
                     DiacriticsOnly.append(comp_diacritics_Only)
-
                 elif prevCharWasDiac and c != u'ٔ' and c != u'ٕ':  # second diacritization
                     third = c
                     letterFoundFlag = False
@@ -305,6 +308,8 @@ def extractEachCharacterFromWordWithItsDiacritization():
                     # for word in listOfUnDiacritizedWord:
                     # for char in word:
                     #  unDiacritizedCharacter.append(char)
+
+
 
 
 def connectToDB():
