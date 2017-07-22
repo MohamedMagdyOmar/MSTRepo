@@ -230,7 +230,6 @@ def create_netcdf_file(dataset_type):
     dataset.createDimension('maxLabelLength', len(purified_labels[0]))  # you get this value from the array 'labels'
     dataset.createDimension('numSeqs', len(seq_lengths))
 
-
     #  added due to error in running library
     dataset.createDimension('maxSeqTagLength', 10)
 
