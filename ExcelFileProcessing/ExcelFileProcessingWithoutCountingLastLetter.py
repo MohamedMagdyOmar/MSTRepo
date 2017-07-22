@@ -11,18 +11,7 @@ from xlrd import open_workbook
 from itertools import groupby
 from xlutils.copy import copy
 
-
-class fatha_correction_class():
-    def __init__(self, location, position, letter):
-        self.location = location
-        self.position = position
-        self.letter = letter
-
-    location = ""
-    position = 0
-    letter = ""
-
-
+final_list_of_word = []
 rnn_output_for_one_seq = []
 neurons_locations_with_highest_output_for_a_seq = []
 list_of_all_diacritized_letters = []
@@ -30,7 +19,7 @@ list_of_all_diacritized_letters = []
 list_of_actual_letters_before_sukun_correction = []
 list_of_expected_letters_before_sukun_correction = []
 final_list_of_actual_letters = []
-
+dictionary_correction_list = []
 
 list_of_actual_letters = []
 list_of_expected_letters = []
@@ -212,48 +201,6 @@ def write_data_into_excel_file(path_of_file):
     workbook.close()
 
 
-
-
-
-def get_locations_of_letters_of_fatha_correction():
-    global locations_of_fatha_correction_letters
-    locations_of_fatha_correction_letters = []
-
-    counter = -1
-    for each_letter in list_of_actual_letters:
-        counter += 1
-        if any(each_letter[0] in s for s in letters_of_fatha_correction):
-            locations_of_fatha_correction_letters.append(counter)
-
-
-def get_type_of_locations_of_fatha_correction():
-    global list_of_location_types
-    list_of_location_types = []
-
-    for each_word in current_sentence:
-        number_of_letters = 0
-        nfkd_form = unicodedata.normalize('NFKD', each_word[0])
-
-        unDiacritizedWord = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
-        for each_letter in unDiacritizedWord:
-            number_of_letters += 1
-
-        location_counter = 0
-        for each_letter in unDiacritizedWord:
-            location_counter += 1
-            if any(each_letter in s for s in letters_of_fatha_correction):
-                if location_counter > 1:
-                    fatha = fatha_correction_class('', 0, '')
-                    fatha.letter = each_letter
-                    if location_counter == number_of_letters:
-                        fatha.location = 'last'
-                    else:
-                        fatha.location = 'middle'
-
-                    list_of_location_types.append(fatha)
-        x = 1
-
-
 def get_location_of_last_characters_in_current_sentence():
 
     list_of_location_of_last_characters_query = "select Word from parseddocument " \
@@ -288,17 +235,13 @@ def fatha_correction():
             spaChar = unicodedata.normalize('NFC', ((list_of_actual_letters_with_its_location[counter - 1])[0])[0])
             for c in spaChar:
                 if not unicodedata.combining(c):
-                    letterFoundFlag = True
                     overall = c
                     comp = unicodedata.normalize('NFC', c)
-
                     final_list_of_actual_letters[counter - 1] = comp
-                elif c == u'َ' or c == u'ّ' or c == u'ً':
 
-                    letterFoundFlag = False
+                elif c == u'َ' or c == u'ّ' or c == u'ً':
                     overall += c
                     comp = unicodedata.normalize('NFC', overall)
-
                     final_list_of_actual_letters[counter - 1] = comp
 
                 else:
@@ -308,7 +251,6 @@ def fatha_correction():
                         c = u'ً'
                     overall += c
                     comp = unicodedata.normalize('NFC', overall)
-
                     final_list_of_actual_letters[counter - 1] = comp
             counter += 1
         else:
@@ -357,6 +299,87 @@ def get_location_of_each_character_in_current_sentence():
     x = 1
 
 
+def reform_word():
+
+    global list_of_actual_letters_with_its_location
+    global final_list_of_actual_letters
+    global dictionary_correction_list
+    global final_list_of_word
+    final_list_of_word = []
+    dictionary_correction_list = []
+    med_list = []
+
+    for x in range(0, len(list_of_actual_letters_with_its_location)):
+        letter = ((list_of_actual_letters_with_its_location[x])[0])[0]
+        position = ((list_of_actual_letters_with_its_location[x])[1])
+        med_list.append(letter)
+        med_list.append(position)
+        dictionary_correction_list.append(med_list)
+        med_list = []
+
+    counter = 0
+    for each_letter in final_list_of_actual_letters:
+        (dictionary_correction_list[counter])[0] = each_letter
+        counter += 1
+
+    word = ""
+    list_of_words = []
+    for each_row in dictionary_correction_list:
+        if each_row[1] != 'last':
+            word += each_row[0]
+        else:
+            word += each_row[0]
+            list_of_words.append(word)
+            word = ""
+    undiacritized_version_list = get_undiacritized_version(list_of_words)
+
+    counter_x = 0
+    for each_word in undiacritized_version_list:
+        diacritized_versions = get_corresponding_diacritized_versions(each_word)
+        if len(diacritized_versions) == 0:
+            final_list_of_word.append(list_of_words[counter_x])
+        else:
+            final_list_of_word.append(get_diac_version_with_smallest_dist(diacritized_versions, list_of_words[counter_x]))
+        counter_x += 1
+
+
+def get_undiacritized_version(list_of_words):
+    overall = ""
+    comp = ""
+    undiacritized_list = []
+    for each_word in list_of_words:
+        spaChar = unicodedata.normalize('NFC', each_word)
+        for c in spaChar:
+            if not unicodedata.combining(c):
+                overall += c
+                comp = unicodedata.normalize('NFC', overall)
+
+        undiacritized_list.append(comp)
+        overall = ""
+        comp = ""
+    return undiacritized_list
+
+
+def get_corresponding_diacritized_versions(word):
+    connect_to_db()
+    selected_sentence_query = "select * from dictionary where UnDiacritizedWord = " + word
+    cur.execute(selected_sentence_query)
+
+    return cur.fetchall()
+
+
+def get_diac_version_with_smallest_dist(diacritized_versions, current_word):
+    min = 100000000
+    final_selected_word = ""
+    for each_diac_word in diacritized_versions:
+        count = sum(1 for a, b in zip(each_diac_word, current_word) if a != b) + abs(len(a) - len(b))
+        if count < min:
+            final_selected_word = each_diac_word
+            min = count
+
+    return final_selected_word
+
+
 def get_diacritization_error():
     global list_of_actual_letters_errors
     global list_of_expected_letters_errors
@@ -394,7 +417,7 @@ def get_diacritization_error():
         worksheet.write(row_of_errors_excel_file, column, expected_letter[0])
 
         column = 1
-        worksheet.write(row_of_errors_excel_file, column, actual_letter[0])
+        worksheet.write(row_of_errors_excel_file, column, actual_letter)
 
         column = 2
         worksheet.write(row_of_errors_excel_file, column, list_of_error_locations[i])
@@ -438,6 +461,7 @@ if __name__ == "__main__":
         get_location_of_last_characters_in_current_sentence()
         get_location_of_each_character_in_current_sentence()
         fatha_correction()
+        reform_word()
         # fatha_correction()
         # write_data_into_excel_file('D:\CurrenntRepo\CurrenntVS\CURRENNT\ArabicDiacritizationExample\Book2.xlsx')
         get_diacritization_error()
