@@ -254,7 +254,7 @@ def extractEachCharacterFromWordWithItsDiacritization():
 
             sentenceNumber = listOfWordsInSent[loopCount][1]
             loopCount += 1
-            #word = u'آبَاءِ'
+
             spaChar = unicodedata.normalize('NFC', word)
             for c in spaChar:
 

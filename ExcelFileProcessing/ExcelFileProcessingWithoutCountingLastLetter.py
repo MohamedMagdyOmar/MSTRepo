@@ -10,7 +10,9 @@ import unicodedata
 from xlrd import open_workbook
 from itertools import groupby
 from xlutils.copy import copy
+import locale
 
+final_list_of_actual_letters_after_post_processing = []
 final_list_of_word = []
 rnn_output_for_one_seq = []
 neurons_locations_with_highest_output_for_a_seq = []
@@ -167,6 +169,31 @@ def sukun_correction():
                     list_of_expected_letters.append(tuple(unicodedata.normalize('NFC', c)))
         else:
             list_of_expected_letters.append(each_character)
+
+
+def sukun_correction_for_dictionary_words(dictionary_list):
+    dictionary_words_without_sukun = []
+    overall = ""
+    for each_row in dictionary_list:
+        for each_char in each_row[1]:
+            spaChar = unicodedata.normalize('NFC', each_char)
+            if u'ْ' in spaChar:
+                    if not unicodedata.combining(spaChar):
+                        overall += spaChar
+                        dictionary_words_without_sukun.append(unicodedata.normalize('NFC', overall))
+            else:
+                overall += spaChar
+        dictionary_words_without_sukun.append(unicodedata.normalize('NFC', overall))
+
+    counter_x = 0
+
+    # convert dictionary_list to list of list to be able to assign values
+    list_of_lists = [list(elem) for elem in list(dictionary_list)]
+    for each_word in dictionary_words_without_sukun:
+        (list_of_lists[counter_x])[1] = each_word
+        counter_x += 1
+
+    return list_of_lists
 
 
 def write_data_into_excel_file(path_of_file):
@@ -339,10 +366,30 @@ def reform_word():
         if len(diacritized_versions) == 0:
             final_list_of_word.append(list_of_words[counter_x])
         else:
-            final_list_of_word.append(get_diac_version_with_smallest_dist(diacritized_versions, list_of_words[counter_x]))
+            dictionary_words_after_removing_sukun = sukun_correction_for_dictionary_words(diacritized_versions)
+            final_list_of_word.append(get_diac_version_with_smallest_dist(dictionary_words_after_removing_sukun,
+                                                                          list_of_words[counter_x]))
         counter_x += 1
 
+    overall = ""
+    comp = ""
+    letterFoundFlag = False
+    global final_list_of_actual_letters_after_post_processing
+    final_list_of_actual_letters_after_post_processing = []
+    for each_word in final_list_of_word:
+        for each_letter in each_word:
+            if not unicodedata.combining(each_letter):
+                if letterFoundFlag:
+                    final_list_of_actual_letters_after_post_processing.append(tuple([comp]))
 
+                overall = each_letter
+                letterFoundFlag = True
+                comp = unicodedata.normalize('NFC', overall)
+            elif letterFoundFlag:
+                overall += each_letter
+                comp = unicodedata.normalize('NFC', overall)
+
+    x = 1
 def get_undiacritized_version(list_of_words):
     overall = ""
     comp = ""
@@ -362,24 +409,83 @@ def get_undiacritized_version(list_of_words):
 
 def get_corresponding_diacritized_versions(word):
     connect_to_db()
-    y = []
-    #word = word.encode('utf-8', 'ignore')
-    #selected_sentence_query = "select * from dictionary where UnDiacritizedWord =" + "'%s'" % word
+
     selected_sentence_query = "select * from dictionary"
     cur.execute(selected_sentence_query)
-    x = cur.fetchall()
-    y = ([t for t in x if t[2].startswith(word)])
-    return cur.fetchall()
+    dictionary_outcome = cur.fetchall()
+
+
+    return [t for t in dictionary_outcome if unicodedata.normalize('NFC', t[2]) == word]
 
 
 def get_diac_version_with_smallest_dist(diacritized_versions, current_word):
     min = 100000000
     final_selected_word = ""
+
+    current_word_list = list(current_word)
+    inter_med_list = []
+    letterFoundFlag = False
+    final_list_for_current_word = []
+    for each_letter in current_word_list:
+        if not unicodedata.combining(each_letter):
+            if letterFoundFlag:
+                final_list_for_current_word.append(inter_med_list)
+
+            inter_med_list = []
+            inter_med_list.append(each_letter)
+            letterFoundFlag = True
+
+        elif letterFoundFlag:
+            inter_med_list.append(each_letter)
+
+    # required because last character will not be added above, but here
+    final_list_for_current_word.append(inter_med_list)
+
+    locale.setlocale(locale.LC_ALL, "")
+    for x in range(0, len(final_list_for_current_word)):
+        final_list_for_current_word[x].sort(cmp=locale.strcoll)
+
+    final_list_for_diacritized_version = []
+    letterFoundFlag = False
     for each_diac_word in diacritized_versions:
-        count = sum(1 for a, b in zip(each_diac_word, current_word) if a != b) + abs(len(a) - len(b))
-        if count < min:
-            final_selected_word = each_diac_word
-            min = count
+        # convert first dictionary word in the form of list of objects [letter, and diacritization]
+        for each_letter in each_diac_word[1]:
+            if not unicodedata.combining(each_letter):
+                if letterFoundFlag:
+                    final_list_for_diacritized_version.append(inter_med_list)
+
+                inter_med_list = []
+                inter_med_list.append(each_letter)
+                letterFoundFlag = True
+
+            elif letterFoundFlag:
+                inter_med_list.append(each_letter)
+
+        # required because last character will not be added above, but here
+        final_list_for_diacritized_version.append(inter_med_list)
+
+        for x in range(0, len(final_list_for_diacritized_version)):
+            final_list_for_diacritized_version[x].sort(cmp=locale.strcoll)
+
+        error_count = 0
+        # calculating number of errors between selected dictionary word, and actual word
+        for each_diacritized_version_letter, each_current_word_letter in zip(final_list_for_diacritized_version, final_list_for_current_word):
+            if (len(each_diacritized_version_letter) - len(each_current_word_letter) == 1) or (
+               (len(each_diacritized_version_letter) - len(each_current_word_letter) == -1)):
+                error_count += 1
+
+            elif (len(each_diacritized_version_letter) - len(each_current_word_letter) == 2) or (
+               (len(each_diacritized_version_letter) - len(each_current_word_letter) == -2)):
+                error_count += 2
+
+            else:
+                for each_item_in_diacritized_version, each_item_in_current_word in zip(each_diacritized_version_letter,each_current_word_letter):
+                    if each_item_in_diacritized_version != each_item_in_current_word:
+                        error_count += 1
+
+        if error_count < min:
+            min = error_count
+            final_selected_word = each_diac_word[1]
 
     return final_selected_word
 
@@ -393,9 +499,9 @@ def get_diacritization_error():
     counter = 0
     letter_location = 0
     list_of_error_locations = []
-    for letter in final_list_of_actual_letters:
+    for letter in final_list_of_actual_letters_after_post_processing:
         letter_location += 1
-        if (letter != (list_of_expected_letters[counter])[0]) and (not(letter_location in location_of_last_character)):
+        if (letter[0] != (list_of_expected_letters[counter])[0]) and (not(letter_location in location_of_last_character)):
             list_of_actual_letters_errors.append(letter)
             list_of_expected_letters_errors.append(list_of_expected_letters[counter])
             list_of_error_locations.append(letter_location)
