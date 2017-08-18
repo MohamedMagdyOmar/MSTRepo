@@ -184,6 +184,7 @@ def sukun_correction_for_dictionary_words(dictionary_list):
             else:
                 overall += spaChar
         dictionary_words_without_sukun.append(unicodedata.normalize('NFC', overall))
+        overall = ""
 
     counter_x = 0
 
@@ -351,6 +352,8 @@ def reform_word():
 
     word = ""
     list_of_words = []
+
+    # re-form the words from the actual o/p letters
     for each_row in dictionary_correction_list:
         if each_row[1] != 'last':
             word += each_row[0]
@@ -390,6 +393,8 @@ def reform_word():
                 comp = unicodedata.normalize('NFC', overall)
 
     x = 1
+
+
 def get_undiacritized_version(list_of_words):
     overall = ""
     comp = ""
@@ -445,10 +450,12 @@ def get_diac_version_with_smallest_dist(diacritized_versions, current_word):
     for x in range(0, len(final_list_for_current_word)):
         final_list_for_current_word[x].sort(cmp=locale.strcoll)
 
-    final_list_for_diacritized_version = []
-    letterFoundFlag = False
+
     for each_diac_word in diacritized_versions:
         # convert first dictionary word in the form of list of objects [letter, and diacritization]
+        final_list_for_diacritized_version = []
+        inter_med_list = []
+        letterFoundFlag = False
         for each_letter in each_diac_word[1]:
             if not unicodedata.combining(each_letter):
                 if letterFoundFlag:
