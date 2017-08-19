@@ -1,7 +1,7 @@
 select  SentenceNumber from parseddocument where LetterType='testing' limit 1;
 select * from parseddocument where   LetterType='training' ;
 select * from parseddocument where   LetterType='validation';
-select * from parseddocument where   LetterType='testing' and SentenceNumber = 4592 ;
+select * from parseddocument where   LetterType='testing' and SentenceNumber = 4650 ;
 select distinct word from parseddocument where   LetterType='testing' order by idCharacterNumber asc;
 select Word from parseddocument where LetterType='testing' order by idCharacterNumber asc;
 select * from dictionary;
@@ -20,11 +20,9 @@ select distinct diacritics from parseddocument;
 select distinct * from alldiacriticsinalldocuments group by Diacritics;
 select * from alldiacriticsinalldocuments where id=7236;
 select * from alldiacriticsinalldocuments;
-
+select * from dictionary where UnDiacritizedWord = 'إنا';
 SET NAMES 'utf8' COLLATE 'utf8_general_ci';
 ALTER DATABASE mstdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-
 
 
 
@@ -82,8 +80,8 @@ UPDATE distinctdiacritics SET encoding = REPLACE(encoding, ']', '');
 -- reset auto increment column
 SET SQL_SAFE_UPDATES = 0;
 SET  @num := 0;
-UPDATE distinctdiacritics SET id = @num := (@num+1);
-ALTER TABLE distinctdiacritics AUTO_INCREMENT =1;
+UPDATE diaconehotencoding SET idDiacritizedCharacter = @num := (@num+1);
+ALTER TABLE diaconehotencoding AUTO_INCREMENT =1;
 
 ALTER TABLE ListOfWordsAndSentencesInEachDoc CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -92,5 +90,3 @@ insert into alldiacriticsinalldocuments (Diacritics) values ('عًّ');
 UPDATE alldiacriticsinalldocuments SET Diacritics = SUBSTR(Diacritics, 1);
 insert into dictionary (DiacritizedWord,UnDiacritizedWord)(select word, UnDiacritizedWord from parseddocument group by word order by UnDiacritizedWord asc);
 
-
-SET SQL_SAFE_UPDATES = 0;
