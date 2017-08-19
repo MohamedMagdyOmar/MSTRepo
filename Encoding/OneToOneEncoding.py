@@ -327,7 +327,7 @@ def connectToDB():
 
 
 def pushDataIntoDB():
-    requiredPercentageForValidation = math.ceil((len(listOfInputSequenceEncodedWords) * 15) / 100)
+    requiredPercentageForValidation = math.ceil((len(listOfInputSequenceEncodedWords) * 12) / 100)
     trainingCounter = len(listOfInputSequenceEncodedWords) - (requiredPercentageForValidation * 2)
     isTrainingDataIsFinished = False
     isValidationDataIsFinished = False
