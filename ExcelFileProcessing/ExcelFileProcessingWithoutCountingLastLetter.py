@@ -506,12 +506,9 @@ def get_diacritization_error():
     counter = 0
     letter_location = 0
     list_of_error_locations = []
-    for letter in final_list_of_actual_letters:
-    #uncommnet below line and comment above line if dictionary correction is needed
-    #for letter in final_list_of_actual_letters_after_post_processing:
+    for letter in final_list_of_actual_letters_after_post_processing:
         letter_location += 1
-        #if (letter[0] != (list_of_expected_letters[counter])[0]):# and (not(letter_location in location_of_last_character)):
-        if (letter != (list_of_expected_letters[counter])[0]):
+        if (letter[0] != (list_of_expected_letters[counter])[0]) and (not(letter_location in location_of_last_character)):
             list_of_actual_letters_errors.append(letter)
             list_of_expected_letters_errors.append(list_of_expected_letters[counter])
             list_of_error_locations.append(letter_location)
@@ -581,7 +578,7 @@ if __name__ == "__main__":
         get_location_of_last_characters_in_current_sentence()
         get_location_of_each_character_in_current_sentence()
         fatha_correction()
-        #reform_word()
+        reform_word()
         # fatha_correction()
         # write_data_into_excel_file('D:\CurrenntRepo\CurrenntVS\CURRENNT\ArabicDiacritizationExample\Book2.xlsx')
         get_diacritization_error()
