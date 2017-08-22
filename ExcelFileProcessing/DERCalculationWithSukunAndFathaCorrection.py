@@ -259,7 +259,7 @@ def fatha_correction():
 
     for each_letter in list_of_actual_letters_with_its_location:
         final_list_of_actual_letters.append((each_letter[0])[0])
-        if ((each_letter[0])[0] in letters_of_fatha_correction) and (each_letter[1] != 'first'):
+        if ((each_letter[0])[0] in letters_of_fatha_correction) and (each_letter[1] != 'first') and ((list_of_actual_letters_with_its_location[counter - 1])[0])[0] != u'بِ':
             spaChar = unicodedata.normalize('NFC', ((list_of_actual_letters_with_its_location[counter - 1])[0])[0])
             for c in spaChar:
                 if not unicodedata.combining(c):
@@ -582,7 +582,7 @@ if __name__ == "__main__":
         get_location_of_each_character_in_current_sentence()
         fatha_correction()
         #reform_word()
-        # fatha_correction()
+        fatha_correction()
         # write_data_into_excel_file('D:\CurrenntRepo\CurrenntVS\CURRENNT\ArabicDiacritizationExample\Book2.xlsx')
         get_diacritization_error()
         currentSentence += 1

@@ -207,6 +207,7 @@ def get_diacritization_error():
     global list_of_actual_letters_errors
     global list_of_expected_letters_errors
     global total_error
+    global total_error
 
     number_of_diacritization_errors = 0
     counter = 0
