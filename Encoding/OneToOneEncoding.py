@@ -13,10 +13,10 @@ listOfDBWords = []
 listOfDbSentenceNumber = []
 listOfPunctuationBySymbol = [u' .', u'.', u' :', u'«', u'»', u'،', u'؛', u'؟', u'.(', u').', u':(', u'):', u'» .', u'».']
 final_ListOfUndiacritized_Word = []
-listOfArabicDiacriticsUnicode = [["064b", "064c", "064d", "064e", "064f", "0650", "0651", "0652"],
-                                 [1, 2, 3, 4, 5, 6, 8, 7]]
+listOfArabicDiacriticsUnicode = [["064b", "064c", "064d", "064e", "064f", "0650", "0651", "0652", "0670"],
+                                 [1, 2, 3, 4, 5, 6, 8, 7, 9]]
 
-
+docname = ""
 def declareGlobalVariables():
     global wordCount
     wordCount = 0
@@ -52,8 +52,8 @@ def extractAndCleanWordsFromDoc():
         wordsInSentence = eachSentence.split()
         for word in wordsInSentence:
             word = word.decode('utf-8', 'ignore') # variable line
-
-            word = re.sub(u'[-;}()0123456789/]', '', word)
+            word = re.sub(u'[-;}()/]', '', word)
+            # word = re.sub(u'[-;}()0123456789/]', '', word)
             word = re.sub(u'["{"]', '', word)
             word = re.sub(u'[:]', ' :', word)
 
@@ -76,7 +76,7 @@ def extractSentencesFromDoc():
     ListOfWordsWithPunctuation = []
     #sentenceCount = 1
 
-    if docName != 'quran-simple.txt':
+    if docName != 'quran-simple.txt' and not (docName.startswith('ANN2002')):
         for word in listOfWords:
 
             if not (word in listOfPunctuationBySymbol):
@@ -157,9 +157,9 @@ def encodingDiacritizedCharacter():
                     letterFoundFlag = False
 
                     hexDiacAsString = hex(ord(c))[2:].zfill(4)
-
+                    if hexDiacAsString == '0670' :
+                        x = 1
                     binaryAsString = bin(int(hexDiacAsString, 16))[2:].zfill(16)
-
                     integerDiac = listOfArabicDiacriticsUnicode[1][
                         listOfArabicDiacriticsUnicode[0].index(hexDiacAsString)]
                     integerDiacAfterORing = shiftedInt | integerDiac
@@ -412,6 +412,7 @@ if __name__ == "__main__":
     findFiles()
     declareGlobalVariables()
     for eachDoc in range(0, len(listOfFilesPathes)):
+        docname = listOfFilesPathes[eachDoc]
         readDoc(eachDoc)
         extractAndCleanWordsFromDoc()
         extractSentencesFromDoc()
