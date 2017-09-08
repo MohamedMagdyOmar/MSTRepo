@@ -53,7 +53,7 @@ def extractAndCleanWordsFromDoc():
         for word in wordsInSentence:
             word = word.decode('utf-8', 'ignore') # variable line
             word = re.sub(u'[-;}()/]', '', word)
-            # word = re.sub(u'[-;}()0123456789/]', '', word)
+            word = re.sub(u'[-;}()0123456789/]', '', word)
             word = re.sub(u'["{"]', '', word)
             word = re.sub(u'[:]', ' :', word)
 
@@ -62,6 +62,17 @@ def extractAndCleanWordsFromDoc():
             word = re.sub(u'[[]', '', word)
             word = re.sub(u'[]]', '', word)
             word = re.sub(u'[L]', '', word)
+            word = re.sub(u'[+]', '', word)
+            word = re.sub(u'[!]', '', word)
+            word = re.sub(u'[\']', '', word)
+            word = re.sub(u'[...]', '', word)
+            word = re.sub(u'[*]', '', word)
+            word = re.sub(u'[&]', '', word)
+            word = re.sub(u'[_]', '', word)
+            word = re.sub(u'[q]', '', word)
+            word = re.sub(u'[u]', '', word)
+            word = re.sub(u'[o]', '', word)
+            word = re.sub(u'[t]', '', word)
             if not (word == u''):
                 listOfWords.append(word)
 
@@ -251,8 +262,10 @@ def extractEachCharacterFromWordWithItsDiacritization():
             # removing diacritization from characters
             nfkd_form = unicodedata.normalize('NFKD', word)
             unDiacritizedWord = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
-
-            sentenceNumber = listOfWordsInSent[loopCount][1]
+            try:
+                sentenceNumber = listOfWordsInSent[loopCount][1]
+            except:
+                x = 1
             loopCount += 1
 
             spaChar = unicodedata.normalize('NFC', word)

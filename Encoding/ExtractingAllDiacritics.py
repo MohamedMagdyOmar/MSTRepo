@@ -10,8 +10,8 @@ listOfPunctuationBySymbol = [u' .', u'.', u' :', u'«', u'»', u'،', u'؛', u'�
                              ]
 DiacriticsOnly = []
 
-listOfArabicDiacriticsUnicode = [["064b", "064c", "064d", "064e", "064f", "0650", "0651", "0652"],
-                                 [1, 2, 3, 4, 5, 6, 8, 7]]
+listOfArabicDiacriticsUnicode = [["064b", "064c", "064d", "064e", "064f", "0650", "0651", "0652", "0670"],
+                                 [1, 2, 3, 4, 5, 6, 8, 7, 9]]
 
 
 def find_files():
