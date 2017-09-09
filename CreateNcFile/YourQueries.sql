@@ -13,6 +13,7 @@ select * from encodedwords;
 select * from undiaconehotencoding;
 select * from UnDiacOneHotEncoding where UnDiacritizedCharacter='' or UnDiacritizedCharacter='.';
 select * from diaconehotencoding;
+select distinct DiacritizedCharacter from diaconehotencoding;
 select DiacritizedCharacter from diaconehotencoding;
 select * from ListOfWordsAndSentencesInEachDoc where word = '' ;
 select * from ListOfWordsAndSentencesInEachDoc;
@@ -24,13 +25,17 @@ select distinct * from alldiacriticsinalldocuments group by Diacritics;
 select * from alldiacriticsinalldocuments where id=7236;
 select * from alldiacriticsinalldocuments;
 select * from dictionary where UnDiacritizedWord = 'إنا';
+select * from arabic_letters_without_diacritics;
+select * from arabic_letters_with_diacritics;
+select * from arabic_diacritics;
+
 SET NAMES 'utf8' COLLATE 'utf8_general_ci';
 ALTER DATABASE mstdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- reset auto increment column
 SET SQL_SAFE_UPDATES = 0;
 SET  @num := 0;
-UPDATE parseddocument SET idCharacterNumber = @num := (@num+1);
+UPDATE parseddocument SET idCharacterNumber= @num := (@num+1);
 ALTER TABLE parseddocument AUTO_INCREMENT =1;
 
 

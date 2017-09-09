@@ -269,7 +269,7 @@ def try_using_query(letter):
 
 
 if __name__ == "__main__":
-    availableDataSetTypes = ['testing']
+    availableDataSetTypes = ['training']
     columnNumberOf_SentenceNumber = 3
 
     create_mysql_connection()

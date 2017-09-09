@@ -34,7 +34,8 @@ location_of_last_character = []
 
 list_of_actual_letters_with_its_location = []
 
-letters_of_fatha_correction = [u'ة', u'ا', u'ى']
+# letters_of_fatha_correction = [u'ة', u'ا', u'ى']
+letters_of_fatha_correction = [u'ة', u'ى']
 locations_of_fatha_correction_letters = []
 list_of_location_types = []
 total_error = 0
