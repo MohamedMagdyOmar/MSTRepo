@@ -29,7 +29,7 @@ def get_all_letters_of_corresponding_dataset_type(type_of_dataset):
                                              "SentenceNumber," \
                                              " Word, InputSequenceEncodedWords, TargetSequenceEncodedWords," \
                                              " DiacritizedCharacter " \
-                                             "from ParsedDocument where LetterType=" + "'%s'" % type_of_dataset
+                                             "from ParsedDocument where LetterType=" + "'%s'" % type_of_dataset + "order by idCharacterNumber asc "
 
     cur.execute(listOfSelectedLettersAndSentencesQuery)
     global listOfSelectedLettersAndSentences
@@ -267,7 +267,7 @@ def try_using_query(letter):
 
 
 if __name__ == "__main__":
-    availableDataSetTypes = ['validation']
+    availableDataSetTypes = ['testing']
     columnNumberOf_SentenceNumber = 3
 
     create_mysql_connection()

@@ -6,7 +6,7 @@ import datetime
 
 global punchNumber
 punchNumber = 0
-max_seq_tag_length = 10
+max_seq_tag_length = 4
 
 
 def create_mysql_connection():
@@ -231,7 +231,7 @@ def create_netcdf_file(dataset_type):
     dataset.createDimension('numSeqs', len(seq_lengths))
 
     #  added due to error in running library
-    dataset.createDimension('maxSeqTagLength', 10)
+    dataset.createDimension('maxSeqTagLength', max_seq_tag_length)
 
     # create the variables
     netCDFLabels = dataset.createVariable('labels', 'S1', ('numLabels', 'maxLabelLength'))
