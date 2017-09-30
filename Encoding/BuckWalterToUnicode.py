@@ -95,8 +95,8 @@ for (key, value) in buck2uni.iteritems():
 # Declare some global variables...
 
 
-inFilename = "C:\Users\Mohamed Magdy\Desktop\IPTest.txt"  # Name of filename containing input.
-outFilename = "C:\Users\Mohamed Magdy\Desktop\OPTest.txt"  # Name of filename to send the output
+inFilename = "C:\Users\Mohamed Magdy\Desktop\Test\ANN20020315.0071.txt"  # Name of filename containing input.
+outFilename = "C:\Users\Mohamed Magdy\Desktop\Test2"  # Name of filename to send the output
 inEnc = ""  # The text encoding of the input file
 outEnc = ""  # The text encoding for the output file
 ignoreChars = ""  # If lines begin with these symbols, ignore.
