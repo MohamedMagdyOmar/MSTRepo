@@ -135,7 +135,7 @@ def get_neurons_numbers_with_highest_output_value():
 
 
 def get_all_letters_from_db():
-    list_of_all_diacritized_letters_query = "select DiacritizedCharacter from diaconehotencoding"
+    list_of_all_diacritized_letters_query = "select DiacritizedCharacter from labels"
 
     cur.execute(list_of_all_diacritized_letters_query)
 
