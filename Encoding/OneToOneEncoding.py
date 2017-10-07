@@ -4,6 +4,7 @@ import unicodedata
 import MySQLdb
 import math
 import os
+import random
 import datetime
 # 1
 diacritizedCharacter = []
@@ -22,6 +23,9 @@ def declareGlobalVariables():
     wordCount = 0
     global sentenceCount
     sentenceCount = 1
+
+    global list_of_all_sentence
+    list_of_all_sentence = []
 
 
 def findFiles():
@@ -53,7 +57,7 @@ def extractAndCleanWordsFromDoc():
         for word in wordsInSentence:
             word = word.decode('utf-8', 'ignore') # variable line
             word = re.sub(u'[-;}()/]', '', word)
-            # word = re.sub(u'[-;}()0123456789/]', '', word)
+            word = re.sub(u'[-;}()0123456789/]', '', word)
             word = re.sub(u'["{"]', '', word)
             word = re.sub(u'[:]', ' :', word)
 
@@ -62,6 +66,17 @@ def extractAndCleanWordsFromDoc():
             word = re.sub(u'[[]', '', word)
             word = re.sub(u'[]]', '', word)
             word = re.sub(u'[L]', '', word)
+            word = re.sub(u'[+]', '', word)
+            word = re.sub(u'[!]', '', word)
+            word = re.sub(u'[\']', '', word)
+            word = re.sub(u'[...]', '', word)
+            word = re.sub(u'[*]', '', word)
+            word = re.sub(u'[&]', '', word)
+            word = re.sub(u'[_]', '', word)
+            word = re.sub(u'[q]', '', word)
+            word = re.sub(u'[u]', '', word)
+            word = re.sub(u'[o]', '', word)
+            word = re.sub(u'[t]', '', word)
             if not (word == u''):
                 listOfWords.append(word)
 
@@ -251,8 +266,10 @@ def extractEachCharacterFromWordWithItsDiacritization():
             # removing diacritization from characters
             nfkd_form = unicodedata.normalize('NFKD', word)
             unDiacritizedWord = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
-
-            sentenceNumber = listOfWordsInSent[loopCount][1]
+            try:
+                sentenceNumber = listOfWordsInSent[loopCount][1]
+            except:
+                x = 1
             loopCount += 1
 
             spaChar = unicodedata.normalize('NFC', word)
@@ -308,8 +325,6 @@ def extractEachCharacterFromWordWithItsDiacritization():
                     # for word in listOfUnDiacritizedWord:
                     # for char in word:
                     #  unDiacritizedCharacter.append(char)
-
-
 
 
 def connectToDB():
@@ -408,6 +423,57 @@ def resetAllLists():
     del listOfTargetSequenceEncodedWordsInHexFormat[:]
     del listOfWordsInSent[:]
 
+
+def prepare_list_for_randomization():
+    list_of_sentence_content = []
+    intermediate_list = []
+    #list_of_all_sentence = []
+    sentence_number = listOfDbSentenceNumber[0]
+    counter = 0
+
+    for current_sentence_number in listOfDbSentenceNumber:
+        if current_sentence_number == sentence_number:
+            intermediate_list = []
+            intermediate_list.append(docName)
+            intermediate_list.append(unDiacritizedCharacter[counter])
+            intermediate_list.append(diacritizedCharacter[counter])
+            intermediate_list.append(listOfDbSentenceNumber[counter])
+            intermediate_list.append(listOfDBWords[counter])
+            intermediate_list.append(listOfInputSequenceEncodedWords[counter])
+            intermediate_list.append(listOfTargetSequenceEncodedWords[counter])
+            intermediate_list.append(listOfInputSequenceEncodedWordsInHexFormat[counter])
+
+            intermediate_list.append(listOfTargetSequenceEncodedWordsInHexFormat[counter])
+            intermediate_list.append(DiacriticsOnly[counter])
+            intermediate_list.append(final_ListOfUndiacritized_Word[counter])
+            list_of_sentence_content.append(intermediate_list)
+            counter += 1
+        else:
+            sentence_number += 1
+            list_of_all_sentence.append(list_of_sentence_content)
+            intermediate_list = []
+            list_of_sentence_content = []
+            intermediate_list.append(docName)
+            intermediate_list.append(unDiacritizedCharacter[counter])
+            intermediate_list.append(diacritizedCharacter[counter])
+            intermediate_list.append(listOfDbSentenceNumber[counter])
+            intermediate_list.append(listOfDBWords[counter])
+            intermediate_list.append(listOfInputSequenceEncodedWords[counter])
+            intermediate_list.append(listOfTargetSequenceEncodedWords[counter])
+            intermediate_list.append(listOfInputSequenceEncodedWordsInHexFormat[counter])
+
+            intermediate_list.append(listOfTargetSequenceEncodedWordsInHexFormat[counter])
+            intermediate_list.append(DiacriticsOnly[counter])
+            intermediate_list.append(final_ListOfUndiacritized_Word[counter])
+            list_of_sentence_content.append(intermediate_list)
+            counter += 1
+    x = 1
+
+def randomize_Data():
+    randomized_Sentence = random.sample(list_of_all_sentence, len(list_of_all_sentence))
+    x = 1
+
+
 if __name__ == "__main__":
     findFiles()
     declareGlobalVariables()
@@ -421,5 +487,8 @@ if __name__ == "__main__":
         #  convertToString()
         extractEachCharacterFromWordWithItsDiacritization()
         connectToDB()
+        prepare_list_for_randomization()
+        randomize_Data()
         pushDataIntoDB()
         resetAllLists()
+
