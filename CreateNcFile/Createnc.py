@@ -48,17 +48,17 @@ def execute_unchanged_sql_queries():
     global listOfUnDiacritizedCharacter
     listOfUnDiacritizedCharacter = cur.fetchall()
 
-    # commented because this is old way for diacritization
+    # use this if you are going to predict character and diacritics
     listOfDiacritizedCharacterQuery = "select * from DiacOneHotEncoding "
     cur.execute(listOfDiacritizedCharacterQuery)
     global listOfDiacritizedCharacter
     listOfDiacritizedCharacter = cur.fetchall()
 
-    # commented because this is new way for diacritization
-    #listOfDiacritizedCharacterQuery = "select * from distinctdiacritics "
-    #cur.execute(listOfDiacritizedCharacterQuery)
-    #global listOfDiacritizedCharacter
-    #listOfDiacritizedCharacter = cur.fetchall()
+    # use this if you are going to predict diacritics only
+    # listOfDiacritizedCharacterQuery = "select * from distinctdiacritics "
+    # cur.execute(listOfDiacritizedCharacterQuery)
+    # global listOfDiacritizedCharacter
+    # listOfDiacritizedCharacter = cur.fetchall()
 
     executeChangedSQLQueriesEndTime = datetime.datetime.now()
     print "executeChangedSQLQueries takes : ", executeChangedSQLQueriesEndTime - executeChangedSQLQueriesStartTime
@@ -159,8 +159,6 @@ def create_netcdf_target_classes():
         OneHotTargetClassNotFound = True
 
         while OneHotTargetClassNotFound:
-            if(searchCounter==421) :
-                x = 1
 
             if listOfDiacritizedCharacter[searchCounter][1] == yourLabel:
                 OneHotTargetClassNotFound = False
